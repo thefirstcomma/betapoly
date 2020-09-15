@@ -1,16 +1,5 @@
 import time
-from game import *
-
-# Turn 1:
-#     actions() -> [List]
-#     rolldie()
-#         -buy_property_landed_on()
-#             -possible_auction()
-#             -actions() -> [List]
-#         -possible_pay_rent()
-        
-#         actions() -> [List]
-
+import game
 
 class Player:
     position = 0
