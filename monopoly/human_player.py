@@ -1,7 +1,6 @@
-import game
+
 
 class Human():
-
     def __init__(self):
         None
 

@@ -2,7 +2,7 @@
 # Type 1 : Railroad
 # Type 2 : Water Works or Electric Company
 # Type 3 : Taxes
-# Type 4  : Free Parking, GO, jail
+# Type 4 : Free Parking, GO
 # Type 5 : Go to Jail
 # Type 6 : Community Chest
 # Type 7 : Chance
