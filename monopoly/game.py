@@ -42,6 +42,7 @@ class Game:
         player.position += sum_die
         if player.position >= 40:
             player.position = player.position % 40
+            print(player.symbol, "passed GO, collect $200")
             player.money += 200
 
     # FIXME: Pricing with Houses/Hotels
@@ -199,6 +200,26 @@ class Game:
     #             return player
     #     return "UNOWNED PROPERTY"
 
+    def check_landed_on_type(self, board, current_player, sum_die):
+        if board[current_player.position][0] == 0:
+            self.land_on_type0(current_player, board)
+        elif board[current_player.position][0] == 1:
+            self.land_on_type1(current_player, board)
+        elif board[current_player.position][0] == 2:
+            self.land_on_type2(current_player, board, sum_die)
+        elif board[current_player.position][0] == 3:
+            self.land_on_type3(current_player, board)
+        elif board[current_player.position][0] == 4:
+            print(f"{current_player.symbol} Landed on Free Parking or GO or Just Visiting, Nothing happens!")
+        elif board[current_player.position][0] == 5:
+            self.land_on_type5(current_player, board)
+        # elif board[current_player.position][0] == 6:
+        #     self.land_on_type6(current_player, board)
+        # elif board[current_player.position][0] == 7:
+        #     self.land_on_type7(current_player, board)
+        else:
+            print("Landed on Type Not Yet Programmed In.\n")
+
     def run(self, players, board):
         number_doubles = 0
         while not players[0].is_bankrupt() and not players[1].is_bankrupt():
@@ -208,48 +229,89 @@ class Game:
             current_player = self.get_current_player(players)
 
             # TODO: Add trade / mortgage phase here!
-            # actions = current_player.get_actions(board, players, -1, rolled_double)
+            # actions = current_player.get_actions(board, players, sum_die=-1, rolled_double)
 
             sum_die, rolled_double = self.roll_dice()
             number_doubles += rolled_double
             
+            # FIXME: Sent to jail for rolling two doubles, 
+            # if current_player.in_jail:
+            #     if current_player.turns_in_jail < 3:
+            #         # 3 options, USE_JAIL_CARD, PAY_50, ROLL_DOUBLE, NO
+            #         got_out = current_player.get_out_jail_actions()
+            #         if got_out == "ROLL_DOUBLE":
+            #             print(f"{current_player.symbol} rolled a {sum_die} in Jail. Which was a {rolled_double} double.\n")
+            #             if rolled_double:
+            #                 current_player.turns_in_jail = 0
+            #                 current_player.in_jail = False
+            #                 number_doubles = 0
+            #             else:
+            #                 current_player.turns_in_jail += 1
+            #                 # Moving one turn out of Jail early cuz of here
+            #                 self.player_turn_indicator += 1
+            #                 self.turns += 1
+            #                 self.print_board(players)
+            #                 if current_player.turns_in_jail <= 2:
+            #                     continue
+            #         elif current_player.get_out_jail_card > 0 and got_out == "USE_JAIL_CARD":
+            #             current_player.get_out_jail_card -= 1
+            #         elif got_out == "PAY_50":
+            #             current_player.update_money(-50)
+            #             print(f"{current_player.symbol} paid $50 to get out of Jail early!")
+            #         else:
+            #             print("Wrong output type")
+            #     else:
+            #         if not rolled_double:
+            #             print(f"{current_player.symbol} paid $50, did not roll a third double")
+            #             current_player.update_money(-50)
+            #         current_player.turns_in_jail = 0
+            #         current_player.in_jail = False
+                
+            #     if rolled_double or got_out != "ROLL_DOUBLE":
+            #         current_player.turns_in_jail = 0
+            #         current_player.in_jail = False
+
+
             if current_player.in_jail:
-                if current_player.turns_in_jail < 3:
-                    # 3 options, USE_JAIL_CARD, PAY_50, ROLL_DOUBLE, NO
-                    got_out = current_player.get_out_jail_actions(sum_die, rolled_double)
-                    if got_out == "ROLL_DOUBLE":
-                        print(f"{current_player.symbol} rolled in Jail: {sum_die} and double status {rolled_double}")
+                action = current_player.get_out_jail_actions()
+                if action == "ROLL_DOUBLE":
+                    if current_player.turns_in_jail == 3:
                         if rolled_double:
+                            print(f"{current_player.symbol} ROLLED A DOUBLE IN JAIL, GET OUT FOR FREE!")
+                            number_doubles -= 1
+                            rolled_double = False
+                        else:
+                            current_player.update_money(-50)
+                            print(f"{current_player.symbol} paid $50 because 3 turns passed w/o doubles")
+                        current_player.turns_in_jail = 0
+                        current_player.in_jail = False
+                    elif current_player.turns_in_jail < 3:
+                        if rolled_double:
+                            print(f"{current_player.symbol} ROLLED A DOUBLE IN JAIL, GET OUT FOR FREE!")
+                            number_doubles -= 1
                             current_player.turns_in_jail = 0
                             current_player.in_jail = False
-                            number_doubles = 0
+                            rolled_double = False
                         else:
+                            print(f"{current_player.symbol} did not roll a double in Jail\n")
                             current_player.turns_in_jail += 1
-                            self.player_turn_indicator += 1
                             self.turns += 1
+                            self.player_turn_indicator += 1
                             self.print_board(players)
-                            if current_player.turns_in_jail <= 2:
-                                continue
-                    elif current_player.get_out_jail_card > 0 and got_out == "USE_JAIL_CARD":
-                        current_player.get_out_jail_card -= 1
-                    elif got_out == "PAY_50":
-                        current_player.update_money(-50)
-                        print(f"{current_player.symbol} payed $50 to get out of Jail early!")
-                    else:
-                        print("Wrong output type")
+                            continue
+                elif current_player.get_out_jail_card > 0 and action == "USE_JAIL_CARD":
+                    current_player.get_out_jail_card -= 1
+                    print(f"{current_player.symbol} used a Get out of Jail Card")
+                    current_player.in_jail = False
+                elif action == "PAY_50":
+                    current_player.update_money(-50)
+                    print(f"{current_player.symbol} paid $50 to get out of Jail early!")
+                    current_player.in_jail = False
                 else:
-                    if not rolled_double:
-                        print(f"{current_player.symbol} payed $50, did not roll a third double")
-                        current_player.update_money(-50)
-                    current_player.turns_in_jail = 0
-                    current_player.in_jail = False
-                
-                if rolled_double or got_out != "ROLL_DOUBLE":
-                    current_player.turns_in_jail = 0
-                    current_player.in_jail = False
-
+                    print("Wrong Output for Jail Action")
 
             if number_doubles >= 3:
+                print(current_player.symbol, "ROLLED 3 DOUBLES consecutively, move to Jail for speeding!")
                 self.land_on_type5(current_player, board)
                 number_doubles = 0
                 self.turns += 1
@@ -257,7 +319,7 @@ class Game:
                 continue
 
             if rolled_double:
-                print(current_player.symbol, "ROLLED A DOUBLE!!! Goes again!!!")
+                print(current_player.symbol, "ROLLED A DOUBLE!!! Goes again next turn!!!")
 
             # TODO: check for mortgage and trades
             # current_player.get_actions(board, players, sum_die, rolled_double)
@@ -265,26 +327,10 @@ class Game:
             self.move_player(current_player, sum_die)
             print(f"\n{current_player.get_symbol()} rolled ({sum_die}) to {board[current_player.position][2]}\n")
             self.print_board(players)
-
-            if board[current_player.position][0] == 0:
-                self.land_on_type0(current_player, board)
-            elif board[current_player.position][0] == 1:
-                self.land_on_type1(current_player, board)
-            elif board[current_player.position][0] == 2:
-                self.land_on_type2(current_player, board, sum_die)
-            elif board[current_player.position][0] == 3:
-                self.land_on_type3(current_player, board)
-            elif board[current_player.position][0] == 4:
-                print(f"{current_player.symbol} Landed on Free Parking or GO or Just Visiting, Nothing happens!")
-            elif board[current_player.position][0] == 5:
-                self.land_on_type5(current_player, board)
-            # elif board[current_player.position][0] == 6:
-            #     self.land_on_type6(current_player, board)
-            else:
-                print("Landed on Type Not Yet Programmed In.\n")
+            self.check_landed_on_type(board, current_player, sum_die)
         
             # TODO: Add trade / mortgage phase here as well!
-            # current_player.get_actions()
+            # current_player.get_actions(board, players, sum_die, rolled_double)
             for player in players:
                 print(player.symbol, "money:", player.get_money())
             print("\n")
@@ -294,7 +340,6 @@ class Game:
                     print(f"{board[i][2]} [{i}] - owned by {e.symbol}")
             print("\n")
 
-
             if not (rolled_double and current_player.in_jail == False):
                 self.player_turn_indicator += 1
                 number_doubles = 0
@@ -302,11 +347,13 @@ class Game:
             self.turns += 1
 
 
-    
+
 
 
 if __name__ == "__main__":
     game = Game()
     game.run(game.players, game.board)
 
-    # print("Outcome of Game: ", status)
+    print("\nOutcome of Game: ")
+    for player in game.players:
+        print(player.symbol, player.total_equity)

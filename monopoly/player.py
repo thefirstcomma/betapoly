@@ -17,11 +17,11 @@ class Player:
         return self.symbol
 
     def is_bankrupt(self):
-        return self.total_equity <= 0
+        return self.total_equity < 0
 
     # Can return only 1 of 4 strings
     def get_out_jail_actions(self, sum_die, rolled_doubles):
-        s = input("Choose an Action between 1. PAY_50, 2. ROLL_DOUBLE, and 3. USE_JAIL_CARD\n>> ")
+        s = input(f"Choose an Action for {self.symbol} between 1. PAY_50, 2. ROLL_DOUBLE, and 3. USE_JAIL_CARD\n>> ")
         return s
 
     def player_buys_property(self, board):
@@ -40,7 +40,7 @@ class Player:
     def mortgage_property(self, board, position):
         self.property_in_use.remove(position)
         self.property_in_mort.append(position)
-        # This is questionable below ->
+        # FIXME This is questionable below ->
         self.update_money(self, board[position][3] // 2)
 
     def get_money(self):
