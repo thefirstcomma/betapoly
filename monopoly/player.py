@@ -20,7 +20,7 @@ class Player:
         return self.total_equity < 0
 
     # Can return only 1 of 4 strings
-    def get_out_jail_actions(self, sum_die, rolled_doubles):
+    def get_out_jail_actions(self):
         s = input(f"Choose an Action for {self.symbol} between 1. PAY_50, 2. ROLL_DOUBLE, and 3. USE_JAIL_CARD\n>> ")
         return s
 
