@@ -56,3 +56,53 @@ BOARD = [
     (3, 100, "Luxury Tax"),
     (0, 400, "Boardwalk", "Blue", 50, 200, 600, 1400, 1700, 2000, 200),
 ]
+
+
+# Type 0: Movement + Money (type, name, movement, money)
+# Type 1: G.O.J.Card (type, name, -1, 0)
+# Type 2: G.to.Jail (type, name, movement, 0)
+# Type 3: Birthday (type, name, -1, money)
+# Type 4: For each House/Hotel (type, name, -houses, -hotels)
+# Type 5: Relative Movement
+
+CHANCE = [
+    (0, "Advance to GO", 0, 0),
+    (0, "Advance to Illinois Ave.", 24, 0),
+    (0, "Advance to St. Charles Place.", 11, 0),
+
+    (5, "Advance token to nearest Utility.", "util", 0),
+    (5, "Advance token to the nearest Railroad and pay owner twice the rental amount.", "railroad", 0),
+    (5, "Go Back 3 Spaces", "three", 0),
+    (4, "For each house pay $25, For each hotel $100", -25, -100),
+    (3, "Pay each player $50.", -1, -50),
+
+    (0, "Pay poor tax of $15", -1, -15),
+    (0, "Take a trip to Reading Railroad.", 5, 0),
+    (0, "Bank pays you dividend of $50.", -1, 50),
+    (1, "Get out of Jail Free Card", -1, 0),
+    (0, "Advance token to Boardwalk.", 39, 0),
+    (0, "Receive $150", -1, 150),
+    (0, "Collect $100.", -1, 100),
+    (2, "Go to Jail.", 30, 0)
+]
+
+COMMUNITY_CHEST = [
+    (0, "Advance to Go", 0, 0),
+    (0, "Collect $200.", -1, 200),
+    (0, "Pay $50.", -1, -50),
+    (0, "Get $50.", -1, 50),
+    (1, "Get Out of Jail Card. ", -1 ,0),
+    (2, "Go to Jail.", 30, 0),
+    (0, "Receive $100.", -1, 100),
+    (0, "Income tax refund. Collect $20. ", -1, 20),
+    (0, "Life insurance matures – Collect $100", -1, 100),
+    (0, "Hospital Fees. Pay $50.", -1, -50),
+    (0, "School fees. Pay $150.", -1 -150),
+    (0, "Receive $25 consultancy fee.", -1, 25),
+
+    (3, "Collect $50 from every player.", 0, 50),
+    (4, "Pay $40 per house and $115 per hotel you own.", -40, -115),
+
+    (0, "You have won second prize in a beauty contest. Collect $10.", -1, 10),
+    (0, "You inherit $100.", -1, 100)
+]

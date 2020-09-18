@@ -8,10 +8,11 @@ class Player:
         self.money = 1500
         self.total_equity = 1500
         self.in_jail = False
-        self.rolled_double = False
         self.turns_in_jail = 0
         self.get_out_jail_card = 0
         self.symbol = string_symbol
+        self.total_houses = 0
+        self.total_hotels = 0
 
     def get_symbol(self):
         return self.symbol
