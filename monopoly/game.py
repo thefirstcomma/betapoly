@@ -55,12 +55,13 @@ class Game:
         # curr_property_owner = self.property_owner(self.board, self.players, current_player.position)
         curr_property_owner = self.owner_list[current_player.position]
         if curr_property_owner == current_player:
-            print("Landed on property {current_player.symbol} already owns.")
+            print(f"Landed on property you {current_player.symbol} already owns.")
         elif curr_property_owner == 0:
             print(current_player.symbol, "Current money:", current_player.money)
             action = current_player.player_buys_property(board)
-            if action == "y" or action == "Y":
+            if (action == "y" or action == "Y") and (current_player.money > board[current_player.position][1]):
                 current_player.update_money(-board[current_player.position][1])
+                current_player.total_equity += board[current_player.position][1]/2
                 self.owner_list[current_player.position] = current_player
                 print(f"{current_player.symbol} bought the {board[current_player.position][3]} property named: "
                         f"{board[current_player.position][2]}\n")
@@ -99,8 +100,9 @@ class Game:
         elif curr_property_owner == 0:
             print(f"{current_player.symbol} Current money: ${current_player.money}")
             action = current_player.player_buys_railroad_utility(board)
-            if action == "y" or action == "Y":
+            if (action == "y" or action == "Y") and (current_player.money > board[current_player.position][1]):
                 current_player.update_money(-board[current_player.position][1])
+                current_player.total_equity += board[current_player.position][1]/2
                 self.owner_list[current_player.position] = current_player
                 print(f"{current_player.symbol} bought RailRoad property: {board[current_player.position][2]}\n")
             elif action == "N" or action == "n":
@@ -134,8 +136,9 @@ class Game:
         elif curr_property_owner == 0:
             print(f"{current_player.symbol} Current money: ${current_player.money}")
             action = current_player.player_buys_railroad_utility(board)
-            if action == "y" or action == "Y":
+            if (action == "y" or action == "Y") and (current_player.money > board[current_player.position][1]):
                 current_player.update_money(-board[current_player.position][1])
+                current_player.total_equity += board[current_player.position][1]/2
                 self.owner_list[current_player.position] = current_player
                 print(f"{current_player.symbol} bought Water-Works / Electric property: {board[current_player.position][2]}\n")
             elif action == "N" or action == "n":
@@ -153,6 +156,7 @@ class Game:
             elif total_amount == 1:
                 amount = die_roll*4
             
+            print("Dice Roll!", die_roll)
             current_player.update_money(-amount)
             curr_property_owner.update_money(amount)
             print(f"{current_player.symbol} paid ${amount} rent to {curr_property_owner.symbol}")
@@ -336,7 +340,12 @@ class Game:
             # TODO: Add trade / mortgage phase here!
             # actions = current_player.get_actions(board, players, sum_die=-1, rolled_double)
             
+            
+                
             sum_die, rolled_double = self.roll_dice()
+            if current_player.symbol == "(P1)":
+                sum_die = 12
+                rolled_double = True
             number_doubles += rolled_double
 
             if current_player.in_jail:
@@ -385,6 +394,7 @@ class Game:
                 number_doubles = 0
                 self.turns += 1
                 self.print_board(players)
+                self.player_turn_indicator += 1
                 continue
 
             # TODO: check for mortgage and trades
@@ -411,6 +421,7 @@ class Game:
             # print("\n")
 
             if not (rolled_double and current_player.in_jail == False):
+            # if not (rolled_double) or current_player.in_jail:
                 self.player_turn_indicator += 1
                 number_doubles = 0
 

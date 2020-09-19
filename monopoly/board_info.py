@@ -94,12 +94,11 @@ COMMUNITY_CHEST = [
     (0, "Collect $20. ", -1, 20),
     (0, "Collect $100", -1, 100),
     (0, "Pay $50.", -1, -50),
-    (0, "Pay $50.", -1 -150),
     (0, "Receive $25 consultancy fee.", -1, 25),
     (0, "Collect $10.", -1, 10),
     (0, "You inherit $100.", -1, 100),
 
-    (1, "Get Out of Jail Card. ", -1 ,0),
+    (1, "Get Out of Jail Card. ", -1, 0),
     (2, "Go to Jail.", 30, 0),
     (3, "Collect $50 from every player.", -1, 50),
     (3, "Collect $10 from every player.", -1, 10),
