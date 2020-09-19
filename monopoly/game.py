@@ -155,8 +155,11 @@ class Game:
                 amount = die_roll*10
             elif total_amount == 1:
                 amount = die_roll*4
+            else:
+                print(f"{curr_property_owner.symbol} mortgaged this property, no rent here!")
             
-            print("Dice Roll!", die_roll)
+            print("Total amount", total_amount)
+            print("Amount", amount)
             current_player.update_money(-amount)
             curr_property_owner.update_money(amount)
             print(f"{current_player.symbol} paid ${amount} rent to {curr_property_owner.symbol}")
@@ -340,11 +343,7 @@ class Game:
             # TODO: Add trade / mortgage phase here!
             # actions = current_player.get_actions(board, players, sum_die=-1, rolled_double)
             
-            
-            
             sum_die, rolled_double = self.roll_dice()
-            if self.turns == 1:
-                sum_die = 12
             number_doubles += rolled_double
 
             if current_player.in_jail:
@@ -420,7 +419,7 @@ class Game:
             # print("\n")
 
             if not (rolled_double and current_player.in_jail == False):
-            # if not (rolled_double) or current_player.in_jail:
+            # if not rolled_double or current_player.in_jail:
                 self.player_turn_indicator += 1
                 number_doubles = 0
 

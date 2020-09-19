@@ -39,7 +39,7 @@ class Player:
         action = input(f"Does {self.symbol} buy the railroad/util named: " 
                     f"{board[self.position][2]} for ${board[self.position][1]} (Y/N)\n")
         if action == 'y' or action == 'Y':
-            pass
+            self.property_in_use.append(self.position)
         return action
 
     #  returns a List of actions
