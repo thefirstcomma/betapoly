@@ -42,7 +42,7 @@ class Player:
         self.property_in_use.remove(position)
         self.property_in_mort.append(position)
         # FIXME This is questionable below ->
-        self.update_money(self, board[position][3] // 2)
+        self.update_money(board[position][3] // 2)
 
     def get_money(self):
         return self.money

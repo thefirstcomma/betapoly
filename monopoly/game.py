@@ -136,7 +136,7 @@ class Game:
                 amount = die_roll*10
             elif total_amount == 1:
                 amount = die_roll*4
-
+            
             current_player.update_money(-amount)
             curr_property_owner.update_money(amount)
             print(f"{current_player.symbol} paid ${amount} rent to {curr_property_owner.symbol}")
@@ -154,15 +154,37 @@ class Game:
         current_player.in_jail = True
         current_player.turns_in_jail = 0
     
-    def land_on_type6(self):
+    def land_on_type6(self, players, current_player, board, die_roll):
         if len(self.comm_cards) == 0:
             self.comm_cards = board_info.COMMUNITY_CHEST.copy()
             random.shuffle(self.comm_cards)
 
         card = (self.comm_cards.pop())
         print(f"Landed on Community Chest, {card[1]}")
+
+        if card[0] == 0:
+            current_player.update_money(card[3])
+            if card[2] != -1:
+                print(f"Moved to new spot: {card[2]}")
+                self.move_cuz_card(current_player, card[2])
+                self.check_landed_on_type(players, board, current_player, die_roll)
+        elif card[0] == 1:
+            current_player.get_out_jail_card += 1
+            print(f"{current_player.symbol} received a get out of Jail Card!")
+        elif card[0] == 2:
+            print(current_player.symbol, "goes to Jail")
+            self.land_on_type5(current_player, board)
+        elif card[0] == 3:
+            print(f"{current_player.symbol} COLLECTS $$$ from every player.")
+            for player in players:
+                if current_player != player:
+                    current_player.update_money(card[3])
+                    player.update_money(-card[3])
+                    print(f"{current_player.symbol} collected ${card[3]} from {player.symbol}")
+        elif card[0] == 4:
+            print("Type not programmed yet, for each house/hotel")
     
-    def land_on_type7(self, current_player):
+    def land_on_type7(self, players, current_player, board, die_roll):
         if len(self.chance_cards) == 0:
             self.chance_cards = board_info.CHANCE.copy()
             random.shuffle(self.chance_cards)
@@ -171,13 +193,48 @@ class Game:
         print(f"Landed on Chance, {card[1]}")
 
         if card[0] == 0:
-            pass
-        elif card[1] == 1:
-            pass
-        
-
-        # if CARD[next_card][0] == 0 and CARD[next_card][2] != -1:
-        #     self.check_landed_on_type(board, current_player)
+            current_player.update_money(card[3])
+            if card[2] != -1:
+                print(f"Moved to new spot: {card[2]}")
+                self.move_cuz_card(current_player, card[2])
+                self.check_landed_on_type(players, board, current_player, die_roll)
+        elif card[0] == 1:
+            current_player.get_out_jail_card += 1
+            print(f"{current_player.symbol} received a get out of Jail Card!")
+        elif card[0] == 2:
+            print(current_player.symbol, "goes to Jail")
+            self.land_on_type5(current_player, board)
+        elif card[0] == 3:
+            print(f"{current_player.symbol} PAYS $$$ to every player.")
+            for player in players:
+                if current_player != player:
+                    current_player.update_money(card[3])
+                    player.update_money(-card[3])
+                    print(f"{current_player.symbol} paid {player.symbol} ${card[3]}")
+        elif card[0] == 4:
+            print("Type not programmed yet, for each house/hotel")
+        elif card[0] == 5:
+            if card[2] == "util":
+                if current_player.position > 28:
+                    current_player.position = 12
+                    current_player.update_money(200)
+                elif current_player.position > 12:
+                    current_player.position = 28
+                self.land_on_type2(current_player, board, die_roll)
+            elif card[2] == "railroad":
+                if current_player.position > 5:
+                    current_player.position = 15
+                elif current_player.position > 15:
+                    current_player.position = 25
+                elif current_player.position > 25:
+                    current_player.position = 35
+                elif current_player.position > 35:
+                    current_player.position = 5
+                    current_player.update_money(200)
+                self.land_on_type1(current_player, board)
+            elif card[2] == "three":
+                current_player.position -= 3
+                self.check_landed_on_type(players, board, current_player, die_roll)
 
     # TODO Need this auction phase done
     def auction_phase(self):
@@ -218,11 +275,11 @@ class Game:
             else:
                 print("If you see this - Pretty Print is broken!\n")
         
-        for i, e in enumerate(mini_board):
-            print(e)
+        for i in mini_board:
+            print(i)
         print("\n")
 
-    def check_landed_on_type(self, board, current_player, sum_die):
+    def check_landed_on_type(self, players, board, current_player, sum_die):
         if board[current_player.position][0] == 0:
             self.land_on_type0(current_player, board)
         elif board[current_player.position][0] == 1:
@@ -232,13 +289,13 @@ class Game:
         elif board[current_player.position][0] == 3:
             self.land_on_type3(current_player, board)
         elif board[current_player.position][0] == 4:
-            print(f"{current_player.symbol} Landed on Free Parking or GO or Just Visiting, Nothing happens!")
+            print(f"{current_player.symbol} Landed on Free Parking or GO or Visiting Jail, Nothing happens!")
         elif board[current_player.position][0] == 5:
             self.land_on_type5(current_player, board)
-        # elif board[current_player.position][0] == 6:
-        #     self.land_on_type6(current_player, board)
-        # elif board[current_player.position][0] == 7:
-        #     self.land_on_type7(current_player, board)
+        elif board[current_player.position][0] == 6:
+            self.land_on_type6(players, current_player, board, sum_die)
+        elif board[current_player.position][0] == 7:
+            self.land_on_type7(players, current_player, board, sum_die)
         else:
             print("Landed on Type Not Yet Programmed In.\n")
 
@@ -304,36 +361,36 @@ class Game:
                 self.print_board(players)
                 continue
 
-            if rolled_double:
-                print(current_player.symbol, "ROLLED A DOUBLE!!! Gets to go again next turn!!!")
-
             # TODO: check for mortgage and trades
             # current_player.get_actions(board, players, sum_die, rolled_double)
  
             self.move_player(current_player, sum_die)
             print(f"\n{current_player.get_symbol()} rolled ({sum_die}) to {board[current_player.position][2]}\n")
+            if rolled_double:
+                print(current_player.symbol, "ROLLED A DOUBLE!!! Gets to go again next turn!!!")
+
+            self.check_landed_on_type(players, board, current_player, sum_die)
             self.print_board(players)
-            self.check_landed_on_type(board, current_player, sum_die)
         
             # TODO: Add trade / mortgage phase here as well!
             # current_player.get_actions(board, players, sum_die, rolled_double)
+            
             for player in players:
                 print(player.symbol, "money:", player.get_money())
             print("\n")
 
-            for i,e in enumerate(self.owner_list):
-                if e is not 0 and e is not -1:
-                    print(f"{board[i][2]} [{i}] - owned by {e.symbol}")
-            print("\n")
+            # for i,e in enumerate(self.owner_list):
+            #     if e is not 0 and e is not -1:
+            #         print(f"{board[i][2]} [{i}] - owned by {e.symbol}")
+            # print("\n")
 
             if not (rolled_double and current_player.in_jail == False):
                 self.player_turn_indicator += 1
                 number_doubles = 0
 
             self.turns += 1
-
-
-
+            response = input("Press ENTER to Continue! >>")
+            assert(response == '')
 
 
 if __name__ == "__main__":
