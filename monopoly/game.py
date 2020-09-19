@@ -341,11 +341,10 @@ class Game:
             # actions = current_player.get_actions(board, players, sum_die=-1, rolled_double)
             
             
-                
+            
             sum_die, rolled_double = self.roll_dice()
-            if current_player.symbol == "(P1)":
+            if self.turns == 1:
                 sum_die = 12
-                rolled_double = True
             number_doubles += rolled_double
 
             if current_player.in_jail:
@@ -412,7 +411,7 @@ class Game:
             # current_player.get_actions(board, players, sum_die, rolled_double)
             
             for player in players:
-                print(player.symbol, "money:", player.get_money())
+                print(player.symbol, "money:", player.get_money(), "equity: ", player.total_equity)
             print("\n")
 
             # for i,e in enumerate(self.owner_list):
