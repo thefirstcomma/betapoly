@@ -14,7 +14,7 @@ class Player:
         self.symbol = string_symbol
         self.total_houses = 0
         self.total_hotels = 0
-        self.houses = [0] * 40
+        # self.houses = [0] * 40
 
     def get_symbol(self):
         return self.symbol
@@ -43,53 +43,47 @@ class Player:
         return action
 
     #  returns a List of actions
-    def get_actions(self, players, board):
-        # mortgaging -> index
-        # for player in players:
-        #     trading(player, self.property_in_use, player.property_in_use, self.get_out_jail_card, self.money, )
-        # trading -> [player, yourproperties, theirproperties, getoutofjailcard, yourmoney, theirmoney]
-        # unmortgaging -> [index]
-        all_actions = []
+    def get_actions(self, players, board, sum_die, rolled_double):
+        action = []
 
-        response = "Hi"
-        while response != 'end':
-            response = input("6 commands: Mortgage, UnMortgage, Trade, Buy Houses, Sell House, or end (M, U, T, B, S, end)")
-            if response == 'M':
-                for i in self.property_in_use:
-                    print(f"{board[i][2], {i}}")
-                get_index = input("What index property do you want to mortgage")
-                all_actions.append((response, get_index))
-            elif response == 'U'
-                for i in self.property_in_mort:
-                    print(f"{board[i][2], {i}}")
-                get_index = input("What index property do you want to unmortgage")
-                all_actions.append((response, get_index))
-            elif response == 'T':
-                get_player = input("What player are you trading with <P#>")
-                other_player = '(' + get_player + ')'
-                trade_player = ":)"
-                for player in players:
-                    if player.symbol == other_player.upper():
-                        trade_player = player
-                for prop in trade_player.property_in_use:
-                    do_soemthing
-                for prop in trade_player.property_in_mort:
-                    do_soemthing
-                get_player.
-            elif response == 'B':
-                pass
-                # self.houses.append(loc_chosen)
-            elif response == 'S':
-                pass
-            elif response == 'end':
-                break
+        response = input("6 commands: Mortgage, UnMortgage, Trade, Buy Houses, Sell House, or (M, U, T, B, S, no_action)")
+        action.append(response)
+        if response == 'M':
+            for i in self.property_in_use:
+                print(f"{board[i][2], {i}}")
+            get_index = input("What index property do you want to mortgage")
+            action.append(get_index)
+        elif response == 'U'
+            for i in self.property_in_mort:
+                print(f"{board[i][2], {i}}")
+            get_index = input("What index property do you want to unmortgage")
+            action.append(get_index)
+        elif response == 'T':
+            get_player = input("What player are you trading with <P#>")
+            other_player = '(' + get_player + ')'
+            trade_player = ":)"
+            for player in players:
+                if player.symbol == other_player.upper():
+                    trade_player = player
+            for prop in trade_player.property_in_use:
+                do_soemthing
+            for prop in trade_player.property_in_mort:
+                do_soemthing
             
-        # all_actions = [("T", p2, MY_STUFF, MY_MONEY, YOUR_STUFF, YOUR_MONEY)]
-        return all_actions
+        elif response == 'B':
+            get_index = input("What property do you want to buy a house on?")
+            action.append(get_index)
+            # self.houses.append(loc_chosen)
+        elif response == 'S':
+            get_index = input("What property do you want to sell a house on?")
+            action.append(get_index)
+            
+        return action
     
     def agree_disagree_trade(self, tuple):
         return "agree"
 
+    # FIXME - Cannot mortgage a property with houses on it.
     def mortgage_property(self, board, location_property):
         self.property_in_use.remove(location_property)
         self.property_in_mort.append(location_property)

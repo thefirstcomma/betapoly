@@ -342,7 +342,15 @@ class Game:
             current_player = self.get_current_player(players)
 
             # TODO: Add trade / mortgage phase here!
-            # actions = current_player.get_actions(board, players, sum_die=-1, rolled_double)
+            prompt = ""
+            while prompt != 'end':
+                action = current_player.get_actions(players, board, sum_die=-1, rolled_double=-1)
+                if action[0] == 'M':
+                    pass
+                elif action[0] == '':
+                elif action[0] == 'no_action':
+                    prompt = end
+                prompt = input("Do you want more actions? (y) or (end)")
             
             sum_die, rolled_double = self.roll_dice()
             number_doubles += rolled_double
