@@ -43,9 +43,52 @@ class Player:
         return action
 
     #  returns a List of actions
-    def get_actions(self):
+    def get_actions(self, players, board):
+        # mortgaging -> index
+        # for player in players:
+        #     trading(player, self.property_in_use, player.property_in_use, self.get_out_jail_card, self.money, )
+        # trading -> [player, yourproperties, theirproperties, getoutofjailcard, yourmoney, theirmoney]
+        # unmortgaging -> [index]
         all_actions = []
+
+        response = "Hi"
+        while response != 'end':
+            response = input("6 commands: Mortgage, UnMortgage, Trade, Buy Houses, Sell House, or end (M, U, T, B, S, end)")
+            if response == 'M':
+                for i in self.property_in_use:
+                    print(f"{board[i][2], {i}}")
+                get_index = input("What index property do you want to mortgage")
+                all_actions.append((response, get_index))
+            elif response == 'U'
+                for i in self.property_in_mort:
+                    print(f"{board[i][2], {i}}")
+                get_index = input("What index property do you want to unmortgage")
+                all_actions.append((response, get_index))
+            elif response == 'T':
+                get_player = input("What player are you trading with <P#>")
+                other_player = '(' + get_player + ')'
+                trade_player = ":)"
+                for player in players:
+                    if player.symbol == other_player.upper():
+                        trade_player = player
+                for prop in trade_player.property_in_use:
+                    do_soemthing
+                for prop in trade_player.property_in_mort:
+                    do_soemthing
+                get_player.
+            elif response == 'B':
+                pass
+                # self.houses.append(loc_chosen)
+            elif response == 'S':
+                pass
+            elif response == 'end':
+                break
+            
+        # all_actions = [("T", p2, MY_STUFF, MY_MONEY, YOUR_STUFF, YOUR_MONEY)]
         return all_actions
+    
+    def agree_disagree_trade(self, tuple):
+        return "agree"
 
     def mortgage_property(self, board, location_property):
         self.property_in_use.remove(location_property)

@@ -61,7 +61,7 @@ class Game:
             action = current_player.player_buys_property(board)
             if (action == "y" or action == "Y") and (current_player.money > board[current_player.position][1]):
                 current_player.update_money(-board[current_player.position][1])
-                current_player.total_equity += board[current_player.position][1]/2
+                current_player.total_equity += int(board[current_player.position][1]/2)
                 self.owner_list[current_player.position] = current_player
                 print(f"{current_player.symbol} bought the {board[current_player.position][3]} property named: "
                         f"{board[current_player.position][2]}\n")
@@ -102,7 +102,7 @@ class Game:
             action = current_player.player_buys_railroad_utility(board)
             if (action == "y" or action == "Y") and (current_player.money > board[current_player.position][1]):
                 current_player.update_money(-board[current_player.position][1])
-                current_player.total_equity += board[current_player.position][1]/2
+                current_player.total_equity += int(board[current_player.position][1]/2)
                 self.owner_list[current_player.position] = current_player
                 print(f"{current_player.symbol} bought RailRoad property: {board[current_player.position][2]}\n")
             elif action == "N" or action == "n":
@@ -138,7 +138,7 @@ class Game:
             action = current_player.player_buys_railroad_utility(board)
             if (action == "y" or action == "Y") and (current_player.money > board[current_player.position][1]):
                 current_player.update_money(-board[current_player.position][1])
-                current_player.total_equity += board[current_player.position][1]/2
+                current_player.total_equity += int(board[current_player.position][1]/2)
                 self.owner_list[current_player.position] = current_player
                 print(f"{current_player.symbol} bought Water-Works / Electric property: {board[current_player.position][2]}\n")
             elif action == "N" or action == "n":
@@ -177,6 +177,7 @@ class Game:
         current_player.in_jail = True
         current_player.turns_in_jail = 0
     
+    # FIXME: Infinite amount of G.o.J.Card right now. Should be max 2
     def land_on_type6(self, players, current_player, board, die_roll):
         if len(self.comm_cards) == 0:
             self.comm_cards = board_info.COMMUNITY_CHEST.copy()
@@ -206,7 +207,7 @@ class Game:
                     print(f"{current_player.symbol} collected ${card[3]} from {player.symbol}")
         elif card[0] == 4:
             houses = current_player.total_houses
-            hotels = current_players.total_hotels
+            hotels = current_player.total_hotels
             print(f"Pay for each house: {houses} and hotel: {hotels}")
             current_player.update_money(houses * card[2])
             current_player.update_money(hotels * card[3])
@@ -241,7 +242,7 @@ class Game:
                     print(f"{current_player.symbol} paid {player.symbol} ${card[3]}")
         elif card[0] == 4:
             houses = current_player.total_houses
-            hotels = current_players.total_hotels
+            hotels = current_player.total_hotels
             print(f"Pay for each house: {houses} and hotel: {hotels}")
             current_player.update_money(houses * card[2])
             current_player.update_money(hotels * card[3])
