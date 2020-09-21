@@ -1,5 +1,6 @@
 import random
 import time
+import colorama
 import player
 import board_info
 
@@ -27,7 +28,6 @@ class Game:
                             -1, 0, 0, 0, 0, 0, 0, -1, 0, 0, 
                             -1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 
                             -1, 0, 0, -1, 0, 0, -1, 0, -1, 0]
-        self.houses = [0]*40 # from 1-5, 5 == hotel
 
     def roll_dice(self):
         first_roll = random.randint(1,6)
@@ -72,8 +72,8 @@ class Game:
             loc = current_player.position
             if loc not in curr_property_owner.property_in_mort:
                 if curr_property_owner.is_monopoly(board, loc): 
-                    numb_houses = self.houses[loc]
-                    if numb_house > 0:
+                    numb_houses = curr_property_owner.houses[loc]
+                    if numb_houses > 0:
                         amount = board[current_player.position][4+numb_houses]
                         current_player.update_money(-amount)
                         curr_property_owner.update_money(amount)
@@ -338,25 +338,28 @@ class Game:
             print("\tTurn", self.turns, ":")
             print("-----------------------")
             current_player = self.get_current_player(players)
-
+            print(current_player.symbol, "turn!")
             # TODO: Add trade / mortgage phase here!
-            action = current_player.get_actions(players, board, sum_die=-1, rolled_double=-1)
-            # prompt = ""
-            # while prompt != 'end':
-            #     action = current_player.get_actions(players, board, sum_die=-1, rolled_double=-1)
-            #     if action[0] == 'M':
-            #         pass
-            #     elif action[0] == 'U':
-            #         pass
-            #     elif action[0] == 'T':
-            #         pass
-            #     elif action[0] == 'B':
-            #         pass
-            #     elif action[0] == 'S':
-            #         pass
-            #     elif action[0] == 'no_action':
-            #         prompt = "end"
-            #     prompt = input("Do you want more actions? (y) or (end)")
+            prompt = ""
+            while prompt != 'end':
+                action = current_player.get_actions(players, board, sum_die=-1, rolled_double=-1)
+                if action[0] == 'M':
+                    current_player.mortgage_property(board, action[1])
+                elif action[0] == 'U':
+                    current_player.unmortgage_property(board, action[1], False)
+                elif action[0] == 'T':
+                    print("IN PROGRESS")
+                    pass
+                elif action[0] == 'B':
+                    current_player.buy_house(board, action[1])
+                    print("Houses Now: ", current_player.houses)
+                elif action[0] == 'S':
+                    current_player.sell_house(board, action[1])
+                    print("Houses Now: ", current_player.houses)
+                    print("Money: ", current_player.money)
+                elif action[0] == 'no_action':
+                    prompt = "end"
+                prompt = input("Do you want more actions? (y) or (end)")
             
             sum_die, rolled_double = self.roll_dice()
             number_doubles += rolled_double
@@ -428,10 +431,13 @@ class Game:
                 print(player.symbol, "money:", player.get_money(), "equity: ", player.total_equity)
             print("\n")
 
-            # for i,e in enumerate(self.owner_list):
-            #     if e is not 0 and e is not -1:
-            #         print(f"{board[i][2]} [{i}] - owned by {e.symbol}")
-            # print("\n")
+            for i,e in enumerate(self.owner_list):
+                if e is not 0 and e is not -1:
+                    if board[i][0] == 0:
+                        print(f"Color: {board[i][3]}, {board[i][2]} [{i}] - owned by {e.symbol}")
+                    else:
+                        print(f"UTIL/RR: {board[i][2]} [{i}] - owned by {e.symbol}")
+            print("\n")
 
             if not (rolled_double and current_player.in_jail == False):
             # if not rolled_double or current_player.in_jail:
