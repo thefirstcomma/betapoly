@@ -1,5 +1,6 @@
 import time
 import math
+from operator import add
 
 class Player:
     def __init__(self, string_symbol):
@@ -12,9 +13,7 @@ class Player:
         self.turns_in_jail = 0
         self.get_out_jail_card = 0
         self.symbol = string_symbol
-        self.total_houses = 0
-        self.total_hotels = 0
-        # self.houses = [0] * 40
+        self.houses = [0] * 40 # 1-5, 5 == hotel
 
     def get_symbol(self):
         return self.symbol
@@ -34,6 +33,17 @@ class Player:
         if action == 'y' or action == 'Y':
             self.property_in_use.append(self.position)
         return action
+    
+    def get_houses_and_hotels(self):
+        hotel = 0
+        housing = 0
+        for i in self.houses:
+            if i == 5:
+                hotel += 1
+            else:
+                housing += i
+        return (housing, hotel)
+
 
     def player_buys_railroad_utility(self, board):
         action = input(f"Does {self.symbol} buy the railroad/util named: " 
@@ -53,7 +63,7 @@ class Player:
                 print(f"{board[i][2], {i}}")
             get_index = input("What index property do you want to mortgage")
             action.append(get_index)
-        elif response == 'U'
+        elif response == 'U':
             for i in self.property_in_mort:
                 print(f"{board[i][2], {i}}")
             get_index = input("What index property do you want to unmortgage")
@@ -62,25 +72,56 @@ class Player:
             get_player = input("What player are you trading with <P#>")
             other_player = '(' + get_player + ')'
             trade_player = ":)"
+            
             for player in players:
                 if player.symbol == other_player.upper():
                     trade_player = player
+                    action.append(trade_player)
+
+            print(self.symbol, " unmortgaged properties:")
             for prop in trade_player.property_in_use:
-                do_soemthing
+                print(board[prop][2], "index: ", prop)
+            print(self.symbol, "index: ", prop)
             for prop in trade_player.property_in_mort:
-                do_soemthing
-            
+                print(board[prop][2], "(", prop, ")")
+            property_offer = input("What properties do you want from" + trade_player.symbol + ": ")
+            property_offer = property_offer.split(' ')
+            # action = ["T", other_player, ["MY PROPERTY OFFER"], ["YOUR PROPERTY OFFER"], my_money, your_money]
+
+            print("Opponent: ", trade_player.symbol, " unmortgaged properties:")
+            for prop in self.property_in_use:
+                print(board[prop][2])
+            print("Opponent: ", trade_player.symbol, " mortgaged properties:")
+            for prop in self.property_in_mort:
+                print(board[prop][2])
+            property_desire = input("What properties are you going to offer?: ")
+            property_desire = property_desire.split(' ')
+
+            my_money = input("How much money are you giving " + trade_player.symbol + " ?")
+            your_money = input("How much money is " + trade_player.symbol + " giving you?")
+            action.append(property_offer, property_desire, my_money, your_money)
+
         elif response == 'B':
+            total_prop = self.property_in_mort + self.property_in_use
+            for i in total_prop:
+                print(board[i][2], "houses: ", self.houses[i])
             get_index = input("What property do you want to buy a house on?")
             action.append(get_index)
-            # self.houses.append(loc_chosen)
         elif response == 'S':
+            for i in self.houses:
+                if i > 0:
+                    print(board[i][2], " has houses: ", self.houses[i])
+            
             get_index = input("What property do you want to sell a house on?")
             action.append(get_index)
+        else:
+            print(f"No action was prompted by {self.symbol}!")
+            action = []
+            action.append("no_action")
             
         return action
     
-    def agree_disagree_trade(self, tuple):
+    def agree_disagree_trade(self, trade_offer):
         return "agree"
 
     # FIXME - Cannot mortgage a property with houses on it.

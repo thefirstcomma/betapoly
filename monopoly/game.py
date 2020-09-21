@@ -206,8 +206,7 @@ class Game:
                     player.update_money(-card[3])
                     print(f"{current_player.symbol} collected ${card[3]} from {player.symbol}")
         elif card[0] == 4:
-            houses = current_player.total_houses
-            hotels = current_player.total_hotels
+            houses, hotels = current_player.get_houses_and_hotels()
             print(f"Pay for each house: {houses} and hotel: {hotels}")
             current_player.update_money(houses * card[2])
             current_player.update_money(hotels * card[3])
@@ -241,8 +240,7 @@ class Game:
                     player.update_money(-card[3])
                     print(f"{current_player.symbol} paid {player.symbol} ${card[3]}")
         elif card[0] == 4:
-            houses = current_player.total_houses
-            hotels = current_player.total_hotels
+            houses, hotels = current_player.get_houses_and_hotels()
             print(f"Pay for each house: {houses} and hotel: {hotels}")
             current_player.update_money(houses * card[2])
             current_player.update_money(hotels * card[3])
@@ -342,15 +340,23 @@ class Game:
             current_player = self.get_current_player(players)
 
             # TODO: Add trade / mortgage phase here!
-            prompt = ""
-            while prompt != 'end':
-                action = current_player.get_actions(players, board, sum_die=-1, rolled_double=-1)
-                if action[0] == 'M':
-                    pass
-                elif action[0] == '':
-                elif action[0] == 'no_action':
-                    prompt = end
-                prompt = input("Do you want more actions? (y) or (end)")
+            action = current_player.get_actions(players, board, sum_die=-1, rolled_double=-1)
+            # prompt = ""
+            # while prompt != 'end':
+            #     action = current_player.get_actions(players, board, sum_die=-1, rolled_double=-1)
+            #     if action[0] == 'M':
+            #         pass
+            #     elif action[0] == 'U':
+            #         pass
+            #     elif action[0] == 'T':
+            #         pass
+            #     elif action[0] == 'B':
+            #         pass
+            #     elif action[0] == 'S':
+            #         pass
+            #     elif action[0] == 'no_action':
+            #         prompt = "end"
+            #     prompt = input("Do you want more actions? (y) or (end)")
             
             sum_die, rolled_double = self.roll_dice()
             number_doubles += rolled_double
