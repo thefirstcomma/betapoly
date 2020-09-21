@@ -341,25 +341,26 @@ class Game:
             print(current_player.symbol, "turn!")
             # TODO: Add trade / mortgage phase here!
             prompt = ""
-            while prompt != 'end':
-                action = current_player.get_actions(players, board, sum_die=-1, rolled_double=-1)
-                if action[0] == 'M':
-                    current_player.mortgage_property(board, action[1])
-                elif action[0] == 'U':
-                    current_player.unmortgage_property(board, action[1], False)
-                elif action[0] == 'T':
-                    print("IN PROGRESS")
-                    pass
-                elif action[0] == 'B':
-                    current_player.buy_house(board, action[1])
-                    print("Houses Now: ", current_player.houses)
-                elif action[0] == 'S':
-                    current_player.sell_house(board, action[1])
-                    print("Houses Now: ", current_player.houses)
-                    print("Money: ", current_player.money)
-                elif action[0] == 'no_action':
-                    prompt = "end"
-                prompt = input("Do you want more actions? (y) or (end)")
+            while prompt != 'n':
+                if prompt == 'y':
+                    action = current_player.get_actions(players, board, sum_die=-1, rolled_double=-1)
+                    if action[0] == 'M':
+                        current_player.mortgage_property(board, action[1])
+                    elif action[0] == 'U':
+                        current_player.unmortgage_property(board, action[1], False)
+                    elif action[0] == 'T':
+                        print("IN PROGRESS")
+                        pass
+                    elif action[0] == 'B':
+                        current_player.buy_house(board, action[1])
+                        print("Houses Now: ", current_player.houses)
+                    elif action[0] == 'S':
+                        current_player.sell_house(board, action[1])
+                        print("Houses Now: ", current_player.houses)
+                        print("Money: ", current_player.money)
+                    elif action[0] == 'no_action':
+                        prompt = "n"
+                prompt = input("Do you want more actions? (y) or (n) ")
             
             sum_die, rolled_double = self.roll_dice()
             number_doubles += rolled_double

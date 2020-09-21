@@ -157,6 +157,7 @@ class Player:
         return not (self.property_in_mort + self.property_in_use)
 
     def buy_house(self, board, location_property):
+        location_property = int(location_property)
         if self.houses[location_property] > 5:
             print("Cannot buy more than a hotel!")
         elif not self.check_property_index_for_houses(location_property):
@@ -169,6 +170,7 @@ class Player:
             self.total_equity -= board[location_property][10]//2
         
     def sell_house(self, board, location_property):
+        location_property = int(location_property)
         if self.houses[location_property] <= 0:
             print("Cannot sell 0 houses")
         elif not self.check_property_index_for_houses(location_property):
@@ -181,12 +183,14 @@ class Player:
 
     # FIXME - Cannot mortgage a property with houses on it.
     def mortgage_property(self, board, location_property):
+        location_property = int(location_property)
         self.property_in_use.remove(location_property)
         self.property_in_mort.append(location_property)
         self.money += board[location_property][1] // 2
 
     # FIXME MUST DEAL WITH NEW_PALYER_UNMORTGAGE == TRUE
     def unmortgage_property(self, board, location_property, new_player_unmortgage):
+        location_property = int(location_property)
         if new_player_unmortgage:
             print("Received a new mortgaged property from a player!")
             print("Unmortgage now (10%) or pay an xtra (10%) later!")
