@@ -1,6 +1,6 @@
 import random
 import time
-import colorama
+from colorama import Fore, Style
 import player
 import board_info
 
@@ -12,6 +12,16 @@ import board_info
 #             -actions() -> [List]
 #         -possible_pay_rent()
 #     actions() -> [List]
+
+# FIXME
+# Deal with 4-8 players
+# Have at max 2 G.o.o.J Cards
+# Colorama
+# Auction Phase
+# Finish (T)rading
+# Check Mortgage for Type 2 (elec/Util)
+# Need to update Income tax to be possible 10% worth vs $200.00 (in type3)
+# Check printing on Sell Houses*
 
 class Game:
     def __init__(self):
@@ -50,9 +60,7 @@ class Game:
             player.update_money(200)
         player.position = future_location
 
-    # FIXME: Pricing with Houses/Hotels
     def land_on_type0(self, current_player, board):
-        # curr_property_owner = self.property_owner(self.board, self.players, current_player.position)
         curr_property_owner = self.owner_list[current_player.position]
         if curr_property_owner == current_player:
             print(f"Landed on property you {current_player.symbol} already owns.")
@@ -106,10 +114,9 @@ class Game:
                 self.owner_list[current_player.position] = current_player
                 print(f"{current_player.symbol} bought RailRoad property: {board[current_player.position][2]}\n")
             elif action == "N" or action == "n":
-                # TODO WORK ON THIS
+                # TODO needs more parameters
                 self.auction_phase()
-        else:
-            # Assuming no houses/hotel is bought
+        else: # Assuming no houses/hotel is bought
             total_amount = 0
             if 5 in curr_property_owner.property_in_use or 5 in curr_property_owner.property_in_mort:
                 total_amount += 1
@@ -128,7 +135,6 @@ class Game:
             curr_property_owner.update_money(25*total_amount)
             print(f"{current_player.symbol} paid rent of ${25*total_amount} to {curr_property_owner.symbol}")
     
-    # TODO- Mortgage for this
     def land_on_type2(self, current_player, board, die_roll):
         curr_property_owner = self.owner_list[current_player.position]
         if curr_property_owner == current_player:
@@ -142,7 +148,7 @@ class Game:
                 self.owner_list[current_player.position] = current_player
                 print(f"{current_player.symbol} bought Water-Works / Electric property: {board[current_player.position][2]}\n")
             elif action == "N" or action == "n":
-                # TODO WORK ON THIS
+                # TODO WORK ON parameters for auction phase
                 self.auction_phase()
         else:
             total_amount, amount = 0, 0
@@ -164,7 +170,6 @@ class Game:
             curr_property_owner.update_money(amount)
             print(f"{current_player.symbol} paid ${amount} rent to {curr_property_owner.symbol}")
 
-    # TODO- Need to update Income tax to be possible 10% worth vs $200.00
     def land_on_type3(self, current_player, board):
         tax_amount = board[current_player.position][1]
         current_player.update_money(-tax_amount)
@@ -177,7 +182,6 @@ class Game:
         current_player.in_jail = True
         current_player.turns_in_jail = 0
     
-    # FIXME: Infinite amount of G.o.J.Card right now. Should be max 2
     def land_on_type6(self, players, current_player, board, die_roll):
         if len(self.comm_cards) == 0:
             self.comm_cards = board_info.COMMUNITY_CHEST.copy()
@@ -268,7 +272,7 @@ class Game:
                 current_player.position -= 3
                 self.check_landed_on_type(players, board, current_player, die_roll)
 
-    # TODO Need this auction phase done
+    # TODO Need this auction parameters
     def auction_phase(self):
         pass
             
@@ -329,7 +333,7 @@ class Game:
         elif board[current_player.position][0] == 7:
             self.land_on_type7(players, current_player, board, sum_die)
         else:
-            print("Landed on Type Not Yet Programmed In.\n")
+            print("You should not see this print statement EVER!.\n")
 
     def run(self, players, board):
         number_doubles = 0
@@ -339,6 +343,7 @@ class Game:
             print("-----------------------")
             current_player = self.get_current_player(players)
             print(current_player.symbol, "turn!")
+
             # TODO: Add trade / mortgage phase here!
             prompt = ""
             while prompt != 'n':
@@ -352,6 +357,7 @@ class Game:
                         print("IN PROGRESS")
                         pass
                     elif action[0] == 'B':
+                        
                         current_player.buy_house(board, action[1])
                         print("Houses Now: ", current_player.houses)
                     elif action[0] == 'S':
@@ -441,7 +447,6 @@ class Game:
             print("\n")
 
             if not (rolled_double and current_player.in_jail == False):
-            # if not rolled_double or current_player.in_jail:
                 self.player_turn_indicator += 1
                 number_doubles = 0
 

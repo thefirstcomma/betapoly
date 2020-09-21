@@ -28,7 +28,7 @@ class Player:
 
     def player_buys_property(self, board):
         action = input(f"Does {self.symbol} buy the {board[self.position][3]} property named: " 
-                    f"{board[self.position][2]} for ${board[self.position][1]} (Y/N)\n")
+                    f"{board[self.position][2]} for ${board[self.position][1]} (Y/N) \n")
         
         if action == 'y' or action == 'Y':
             self.property_in_use.append(self.position)
@@ -46,7 +46,7 @@ class Player:
 
     def player_buys_railroad_utility(self, board):
         action = input(f"Does {self.symbol} buy the railroad/util named: " 
-                    f"{board[self.position][2]} for ${board[self.position][1]} (Y/N)\n")
+                    f"{board[self.position][2]} for ${board[self.position][1]} (Y/N) \n")
         if action == 'y' or action == 'Y':
             self.property_in_use.append(self.position)
         return action
@@ -67,7 +67,7 @@ class Player:
             get_index = input("What index property do you want to unmortgage : ")
             action.append(get_index)
         elif response == 'T':
-            get_player = input("What player are you trading with <P#>")
+            get_player = input("What player are you trading with <P#> ")
             other_player = '(P' + get_player + ')'
             trade_player = ":)"
             for player in players:
@@ -104,13 +104,18 @@ class Player:
             total_prop = self.property_in_mort + self.property_in_use
             total_prop = self.remove_non_housing_property(total_prop)
             for i in total_prop:
-                print(board[i][2], "\thouses: ", self.houses[i])
+                print("i: ", i, board[i][2], "\thouses: ", self.houses[i])
             get_index = input("What property do you want to buy a house on? ")
             action.append(get_index)
         elif response == 'S' and not self.has_no_property():
-            for i in self.houses:
-                if i > 0:
-                    print(board[i][2], " has houses: ", self.houses[i])
+            total_prop = self.property_in_mort + self.property_in_use
+            total_prop = self.remove_non_housing_property(total_prop)
+            for i in total_prop:
+                print("i: ", i, board[i][2], "\thouses: ", self.houses[i])
+            # UNCOMMENT HERE, LATER!
+            # for i in self.houses:
+            #     if i > 0:
+            #         print("i: ", i, board[i][2], " has ", self.houses[i], " houses.")
             get_index = input("What property do you want to sell a house on? ")
             action.append(get_index)
         else:
@@ -136,17 +141,9 @@ class Player:
         return properties
 
     def check_property_index_for_houses(self, index):
-        if index == 5:
+        if index == 5 or index == 15 or index == 25 or index == 35:
             return False
-        if index == 15:
-            return False
-        if index == 25:
-            return False
-        if index == 35:
-            return False
-        if index == 12:
-            return False
-        if index == 28:
+        if index == 12 or index == 28:
             return False
         return True
 
