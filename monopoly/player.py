@@ -29,9 +29,6 @@ class Player:
     def player_buys_property(self, board):
         action = input(f"Does {self.symbol} buy the {board[self.position][3]} property named: " 
                     f"{board[self.position][2]} for ${board[self.position][1]} (Y/N) \n")
-        
-        if action == 'y' or action == 'Y':
-            self.property_in_use.append(self.position)
         return action
     
     def get_houses_and_hotels(self):
@@ -47,8 +44,6 @@ class Player:
     def player_buys_railroad_utility(self, board):
         action = input(f"Does {self.symbol} buy the railroad/util named: " 
                     f"{board[self.position][2]} for ${board[self.position][1]} (Y/N) \n")
-        if action == 'y' or action == 'Y':
-            self.property_in_use.append(self.position)
         return action
 
     #  returns a List of actions
@@ -104,14 +99,14 @@ class Player:
             total_prop = self.property_in_mort + self.property_in_use
             total_prop = self.remove_non_housing_property(total_prop)
             for i in total_prop:
-                print("i: ", i, board[i][2], "\thouses: ", self.houses[i])
+                print(f"i:[{i}] {board[i][2]}, \thouses: {self.houses[i]}")
             get_index = input("What property do you want to buy a house on? ")
             action.append(get_index)
         elif response == 'S' and not self.has_no_property():
             total_prop = self.property_in_mort + self.property_in_use
             total_prop = self.remove_non_housing_property(total_prop)
             for i in total_prop:
-                print("i: ", i, board[i][2], "\thouses: ", self.houses[i])
+                print(f"i: ", i, board[i][2], "\thouses: ", self.houses[i])
             get_index = input("What property do you want to sell a house on? ")
             action.append(get_index)
         else:
@@ -151,7 +146,7 @@ class Player:
 
     def buy_house(self, board, location_property):
         location_property = int(location_property)
-        if self.houses[location_property] > 5:
+        if self.houses[location_property] >= 5:
             print("Cannot buy more than a hotel!")
         elif not self.check_property_index_for_houses(location_property):
             print(f"Can't build houses on Railroad or Utility")
@@ -173,15 +168,18 @@ class Player:
             print(f"Can't sell houses on Railroad or Utility")
         elif not self.sell_numb_houses_is_good(board, location_property):
             print(f"Can't sell multiple houses in a non-row fashion.")
-        else:
+        elif self.is_monopoly(board, location_property):
             self.houses[location_property] -= 1
             self.money += board[location_property][10]//2
+        else:
+            print("YOU SHOULD NEVER EVER SEE THIS PRINT MESSAGE PLAYERS.SELL_HOUSE")
 
     # FIXME - Cannot mortgage a property with houses on it.
     def mortgage_property(self, board, location_property):
         location_property = int(location_property)
         self.property_in_use.remove(location_property)
         self.property_in_mort.append(location_property)
+        print(f"Mortgaged this property {board[location_property][2]} received: ${board[location_property][1] // 2} money")
         self.money += board[location_property][1] // 2
 
     # FIXME MUST DEAL WITH NEW_PALYER_UNMORTGAGE == TRUE
