@@ -6,7 +6,6 @@
 # Type 5 : Go to Jail
 # Type 6 : Community Chest
 # Type 7 : Chance
-
 BOARD = [
     # [0 - 9]
     (4, "GO", "GO"),
@@ -57,14 +56,12 @@ BOARD = [
     (0, 400, "Boardwalk", "Blue", 50, 200, 600, 1400, 1700, 2000, 200),
 ]
 
-
 # Type 0: Movement + Money (type, name, movement, money)
 # Type 1: G.O.J.Card (type, name, -1, 0)
 # Type 2: G.to.Jail (type, name, movement, 0)
 # Type 3: Birthday (type, name, -1, money)
 # Type 4: For each House/Hotel (type, name, -houses, -hotels)
 # Type 5: Relative Movement
-
 CHANCE = [
     (0, "Advance to GO", 0, 0),
     (0, "Advance to Illinois Ave.", 24, 0),

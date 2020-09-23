@@ -14,16 +14,17 @@ import board_info
 #     actions() -> [List]
 
 # FIXME
-# Deal with 4-8 players
+# Deal with 4-8 players, get_current_player(self, players)
 # Have at max 2 G.o.o.J Cards
 # Colorama, for board presentation
 # Auction Phase
 # Finish (T)rading
 # Check Mortgage for Type 2 (elec/Util)
 # Need to update Income tax to be possible 10% worth vs $200.00 (in type3)
-# Check printing on Sell Houses*
+# Check printing overall throughout the Game
 # Auction for housing, limit housing=32, hotels=12, and everytime someone buys/sells houses, iterate player actions.
 # Fix Game__init__() for player# parameter/input
+# Add a state for Player -> .open_for_trading()
 
 class Game:
     def __init__(self):
@@ -48,7 +49,7 @@ class Game:
         second_roll = random.randint(1,6)
         return (first_roll + second_roll, first_roll == second_roll)
     
-    # Only works for 2 players right now
+    # TODO Only works for 2 players right now
     def get_current_player(self, players):
         return players[0] if self.player_turn_indicator % 2 == 0 else players[1]
     
@@ -204,12 +205,12 @@ class Game:
             random.shuffle(self.comm_cards)
 
         card = (self.comm_cards.pop())
-        print(f"Landed on Community Chest, {card[1]}")
+        print(f"\tLanded on Community Chest!! {card[1]}")
 
         if card[0] == 0:
             current_player.update_money(card[3])
             if card[2] != -1:
-                print(f"Moved to new spot: {card[2]}")
+                print(f"Moved to a new spot: {card[2]}")
                 self.move_cuz_card(current_player, card[2])
                 self.check_landed_on_type(players, board, current_player, die_roll)
         elif card[0] == 1:
@@ -308,7 +309,6 @@ class Game:
                         ["-", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "  ", "-"],
                         ["Jail", "-", "-", "-", "-", "-", "-", "-", "-", "-", "GO"]
         ]
-        # pretty print
         for player in players:
             number = player.position
             if number <= 10:
@@ -329,7 +329,6 @@ class Game:
                 mini_board[number % 10][10] += (player.get_symbol())
             else:
                 print("If you see this - Pretty Print is broken!\n")
-        
         for i in mini_board:
             print(i)
         print("\n")
@@ -344,7 +343,7 @@ class Game:
         elif board[current_player.position][0] == 3:
             self.land_on_type3(current_player, board)
         elif board[current_player.position][0] == 4:
-            print(f"{current_player.symbol} Landed on Free Parking or GO or Visiting Jail, Nothing happens!")
+            print(f"{current_player.symbol} Landed on | F.P.| GO | Jail-Visit |, Nothing happens!\n")
         elif board[current_player.position][0] == 5:
             self.land_on_type5(current_player, board)
         elif board[current_player.position][0] == 6:
@@ -352,7 +351,97 @@ class Game:
         elif board[current_player.position][0] == 7:
             self.land_on_type7(players, current_player, board, sum_die)
         else:
-            print("You should not see this print statement EVER!.\n")
+            print("You should not see this print statement EVER!. @game/check_landed_on_type\n")
+    
+    def print_property_and_money(self, players, board):
+        for player in players:
+            print(f'{player.symbol} money: ${player.get_money()} - equity: ${player.total_equity}')
+
+        for player in players:
+            print(f"\n{player.symbol} Properties: ")
+            tmp = sorted(player.property_in_use + player.property_in_mort)
+            for i in tmp:
+                if player.check_property_index_for_houses(i):
+                    color = ''
+                    if board[i][3] == 'Lt.Blue':
+                        color = Fore.LIGHTCYAN_EX
+                    elif board[i][3] == 'Brown':
+                        pass
+                    elif board[i][3] == 'Pink':
+                        color = Fore.MAGENTA
+                    elif board[i][3] == 'Orange':
+                        pass
+                    elif board[i][3] == 'Yellow':
+                        color = Fore.YELLOW
+                    elif board[i][3] == 'Red':
+                        color = Fore.RED
+                    elif board[i][3] == 'Green':
+                        color = Fore.GREEN
+                    elif board[i][3] == 'Blue':
+                        color = Fore.BLUE
+
+                    if i in player.property_in_mort:
+                        print(color + f'{board[i][3]} - {board[i][2]} [{i}] - In Mortgage' + Style.RESET_ALL)
+                    else:
+                        print(color + f'{board[i][3]} - {board[i][2]} [{i}]' + Style.RESET_ALL)
+                else:
+                    if i in player.property_in_mort:
+                        if i == 12 or i == 28:
+                            print(f'Util: {board[i][2]} [{i}] - In Mortgage')
+                        else:
+                            print(f'Rail: {board[i][2]} [{i}] - In Mortgage')
+                    else:
+                        if i == 12 or i == 28:
+                            print(f'Util: {board[i][2]} [{i}]')
+                        else:
+                            print(f'Rail: {board[i][2]} [{i}]')
+            print()
+        print("\n")
+
+    def action_trade(self, players, board, current_player, sum_die, rolled_double):
+        prompt = ""
+        while prompt != 'n':
+            if prompt == 'y':
+                action = current_player.get_actions(players, board, sum_die=-1, rolled_double=-1)
+                if action[0] == 'M':
+                    current_player.mortgage_property(board, action[1])
+                elif action[0] == 'U':
+                    current_player.unmortgage_property(board, action[1], False)
+                elif action[0] == 'T':
+                    _, trade_player, curr_property_offers, trader_property_offers, curr_money, trader_money = action
+                    print(f"Trade request sent between {current_player.symbol} and {trade_player.symbol}")
+                    curr_property_offers = list(map(int, curr_property_offers)) 
+                    trader_property_offers = list(map(int, trader_property_offers)) 
+                    trade_response = trade_player.agree_disagree_trade(board, current_player, curr_property_offers,
+                                                        trader_property_offers, curr_money, trader_money)
+                    if trade_response == 'agree':
+                        print("Agreed to trade")
+                        curr_money, trader_money = int(curr_money), int(trader_money)
+                        current_player.update_money(-curr_money)
+                        trade_player.update_money(curr_money)
+                        current_player.update_money(trader_money)
+                        trade_player.update_money(-trader_money)
+                        print(f"{current_player.symbol} ${current_player.money}, "
+                                f"{current_player.symbol} ${trade_player.money}")
+                        print("----Work on property transferring here-----")
+                        # TODO :(
+                    else:
+                        print(trade_player.symbol, "has disagreed the trade offer!")
+                        print("You can request another Trade offer... or not.")
+                elif action[0] == 'B':
+                    current_player.buy_house(board, action[1])
+                    print("Houses Now: ", current_player.print_houses(board))
+                elif action[0] == 'S':
+                    current_player.sell_house(board, action[1])
+                    print("Houses Now: ", current_player.print_houses(board))
+                    print("Money: ", current_player.money)
+                elif action[0] == 'no_action':
+                    prompt = "n"
+                else:
+                    print("Didn't understand input!")
+
+            prompt = input("Do you want more actions? (y) or (n) ")
+            prompt = prompt.lower().strip()
 
     def run(self, players, board):
         number_doubles = 0
@@ -363,47 +452,8 @@ class Game:
             current_player = self.get_current_player(players)
             print(current_player.symbol, "turn!")
 
-            # TODO: Add trade / mortgage phase here!
-            prompt = ""
-            while prompt != 'n':
-                if prompt == 'y':
-                    action = current_player.get_actions(players, board, sum_die=-1, rolled_double=-1)
-                    if action[0] == 'M':
-                        current_player.mortgage_property(board, action[1])
-                    elif action[0] == 'U':
-                        current_player.unmortgage_property(board, action[1], False)
-                    elif action[0] == 'T':
-                        _, trade_player, curr_property_offers, trader_property_offers, curr_money, trader_money = action
-                        print(f"Trade request sent between {current_player.symbol} and {trade_player.symbol}")
-                        trade_response = trade_player.agree_disagree_trade(board, current_player, curr_property_offers,
-                                                            trader_property_offers, curr_money, trader_money)
-                        if trade_response == 'agree':
-                            print("Agreed to trade")
-                            curr_money = int(curr_money)
-                            trader_money = int(trader_money)
-                            current_player.update_money(-curr_money)
-                            trade_player.update_money(curr_money)
-                            current_player.update_money(trader_money)
-                            trade_player.update_money(-trader_money)
-                            print(f"{current_player.symbol} ${current_player.money}, {current_player.symbol} ${trade_player.money}")
-                            print("NEED TO CHANGE PROPERTY LATER!")
-                        else:
-                            print(trade_player.symbol, " has disagreed the trade offer!")
-                            print("You can try again if you want!")
-                    elif action[0] == 'B':
-                        current_player.buy_house(board, action[1])
-                        print("Houses Now: ", current_player.houses)
-                    elif action[0] == 'S':
-                        current_player.sell_house(board, action[1])
-                        print("Houses Now: ", current_player.houses)
-                        print("Money: ", current_player.money)
-                    elif action[0] == 'no_action':
-                        prompt = "n"
-                    else:
-                        print("Didn't understand input!")
-                        prompt = 'n'
-                prompt = input("Do you want more actions? (y) or (n) ")
-                prompt = prompt.lower().strip()
+            # TODO: Add actions phase here!
+            self.action_trade(players, board, current_player, sum_die=-1, rolled_double=-1)
             
             sum_die, rolled_double = self.roll_dice()
             number_doubles += rolled_double
@@ -440,13 +490,13 @@ class Game:
                     print(f"{current_player.symbol} used a Get out of Jail Card")
                     current_player.in_jail = False
                     current_player.turns_in_jail = 0
-                elif action == "PAY_50":
+                elif current_player.money >= 50 and action == "PAY_50":
                     current_player.update_money(-50)
                     print(f"{current_player.symbol} paid $50 to get out of Jail early!")
                     current_player.in_jail = False
                     current_player.turns_in_jail = 0
                 else:
-                    print("Wrong Output for Jail Action")
+                    print("You cannot do that, resources unavailable or wrong command.")
 
             if number_doubles >= 3:
                 print(current_player.symbol, "ROLLED 3 DOUBLES consecutively, move to Jail for speeding!")
@@ -455,51 +505,30 @@ class Game:
                 self.turns += 1
                 self.print_board(players)
                 self.player_turn_indicator += 1
+                self.print_property_and_money(players, board)
                 continue
 
-            # TODO: check for mortgage and trades
-            # current_player.get_actions(board, players, sum_die, rolled_double)
- 
+            # TODO: Add actions phase here
+            # self.action_trade(players, board, current_player, sum_die, rolled_double)
+            
             self.move_player(current_player, sum_die)
-            print(f"\n{current_player.get_symbol()} rolled ({sum_die}) to {board[current_player.position][2]}\n")
+            print(f"\n---> {current_player.get_symbol()} rolled ({sum_die}) to {board[current_player.position][2]}\n")
             if rolled_double:
-                print(current_player.symbol, "ROLLED A DOUBLE!!! Gets to go again next turn!!!")
+                print(current_player.symbol, "ROLLED A DOUBLE!!! Gets to go again next turn!!!\n")
 
             self.check_landed_on_type(players, board, current_player, sum_die)
             self.print_board(players)
         
-            # TODO: Add trade / mortgage phase here as well!
-            # current_player.get_actions(board, players, sum_die, rolled_double)
+            # TODO: Add actions phase here
+            # self.action_trade(players, board, current_player, sum_die, rolled_double)
             
-            for player in players:
-                print(player.symbol, "money:", player.get_money(), "equity: ", player.total_equity)
-            print("\n")
-
-            for player in players:
-                print(player.symbol, "Properties: ")
-                tmp = sorted(player.property_in_use + player.property_in_mort)
-                for i in tmp:
-                    if player.check_property_index_for_houses(i):
-                        if i in player.property_in_mort:
-                            print(f'Color: {board[i][3]} - {board[i][2]} [{i}] - In Mortgage')
-                        else:
-                            print(f'Color: {board[i][3]} - {board[i][2]} [{i}]')
-                    else:
-                        if i in player.property_in_mort:
-                            print(f'Util/RR: {board[i][2]} [{i}] - In Mortgage')
-                        else:
-                            print(f'Util/RR: {board[i][2]} [{i}]')
-                print()
-            print("\n")
+            self.print_property_and_money(players, board)
 
             if not (rolled_double and current_player.in_jail == False):
                 self.player_turn_indicator += 1
                 number_doubles = 0
 
             self.turns += 1
-            response = input("Press ENTER to Continue! >>")
-            response = response.strip()
-            assert(response == '')
 
 
 if __name__ == "__main__":
