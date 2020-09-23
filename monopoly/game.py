@@ -23,6 +23,7 @@ import board_info
 # Need to update Income tax to be possible 10% worth vs $200.00 (in type3)
 # Check printing on Sell Houses*
 # Auction for housing, limit housing=32, hotels=12, and everytime someone buys/sells houses, iterate player actions.
+# Fix Game__init__() for player# parameter/input
 
 class Game:
     def __init__(self):
@@ -372,10 +373,21 @@ class Game:
                     elif action[0] == 'U':
                         current_player.unmortgage_property(board, action[1], False)
                     elif action[0] == 'T':
-                        _, trade_player, my_property_offers, trader_property_offers, my_money, trader_money = action
+                        _, trade_player, curr_property_offers, trader_property_offers, curr_money, trader_money = action
                         print(f"Trade request sent between {current_player.symbol} and {trade_player.symbol}")
-                        
-                        
+                        trade_response = trade_player.agree_disagree_trade(board, current_player, curr_property_offers,
+                                                            trader_property_offers, curr_money, trader_money)
+                        if trade_response == 'agree':
+                            print("Agreed to trade")
+                            current_player.update_money(-curr_money)
+                            trade_player.update_money(curr_money)
+                            current_player.update_money(trader_money)
+                            trade_player.update_money(-trader_money)
+                            print(f"{current_player.symbol} ${current_player.money}, {current_player.symbol} ${trade_player.money}")
+                            print("NEED TO CHANGE PROPERTY LATER!")
+                        else:
+                            print(trade_player.symbol, " has disagreed the trade offer!")
+                            print("You can try again if you want!")
                     elif action[0] == 'B':
                         current_player.buy_house(board, action[1])
                         print("Houses Now: ", current_player.houses)
@@ -386,6 +398,7 @@ class Game:
                     elif action[0] == 'no_action':
                         prompt = "n"
                 prompt = input("Do you want more actions? (y) or (n) ")
+                prompt = prompt.lower().strip()
             
             sum_die, rolled_double = self.roll_dice()
             number_doubles += rolled_double

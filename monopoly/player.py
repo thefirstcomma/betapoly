@@ -1,6 +1,7 @@
 import time
 import math
 from operator import add
+from itertools import zip_longest
 
 class Player:
     def __init__(self, string_symbol):
@@ -29,7 +30,7 @@ class Player:
     def player_buys_property(self, board):
         action = input(f"Does {self.symbol} buy the {board[self.position][3]} property named: " 
                     f"{board[self.position][2]} for ${board[self.position][1]} (Y/N) \n")
-        return action
+        return action.lower().strip()
     
     def get_houses_and_hotels(self):
         hotel = 0
@@ -44,12 +45,13 @@ class Player:
     def player_buys_railroad_utility(self, board):
         action = input(f"Does {self.symbol} buy the railroad/util named: " 
                     f"{board[self.position][2]} for ${board[self.position][1]} (Y/N) \n")
-        return action
+        return action.lower().strip()
 
     #  returns a List of actions
     def get_actions(self, players, board, sum_die, rolled_double):
         action = []
         response = input("6 commands: Mortgage, UnMortgage, Trade, Buy Houses, Sell House, or (M, U, T, B, S) : ")
+        response = response.upper().strip()
         action.append(response)
         if response == 'M' and not self.has_no_property():
             for i in self.property_in_use:
@@ -138,8 +140,15 @@ class Player:
             return False
         return True
 
-    def agree_disagree_trade(self, trade_offer):
-        return "agree"
+    def agree_disagree_trade(self, board, other_player, their_property, my_property, their_money, my_money):
+        for i, j in (zip_longest(my_property, their_property)):
+            print(f'{other_player.symbol} offers property: {board[j][2]} - for your property of: {board[i][2]}')
+        print("AND")
+        print(f'{other_player.symbol} Offers: ${their_money} vs. your ${my_money}')
+
+        action = input(f"Do you agree to the trade offered by {other_player.symbol}?"
+                        f"Type 'agree' or 'disagree' ")
+        return action
     
     def has_no_property(self):
         return not (self.property_in_mort + self.property_in_use)
