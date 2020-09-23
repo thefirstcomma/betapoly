@@ -112,10 +112,6 @@ class Player:
             total_prop = self.remove_non_housing_property(total_prop)
             for i in total_prop:
                 print("i: ", i, board[i][2], "\thouses: ", self.houses[i])
-            # UNCOMMENT HERE, LATER!
-            # for i in self.houses:
-            #     if i > 0:
-            #         print("i: ", i, board[i][2], " has ", self.houses[i], " houses.")
             get_index = input("What property do you want to sell a house on? ")
             action.append(get_index)
         else:
@@ -161,10 +157,13 @@ class Player:
             print(f"Can't build houses on Railroad or Utility")
         elif not self.buy_numb_houses_is_good(board, location_property):
             print(f"Can't build multiple houses in a non-row fashion.")
-        else:
+        elif self.is_monopoly(board, location_property):
+            print("This property is a monopoly! Buying!")
             self.houses[location_property] += 1
             self.money -= board[location_property][10]
-            self.total_equity -= board[location_property][10]//2
+            self.total_equity -= board[location_property][10] // 2
+        else:
+            print("Not a monopoly property!")
         
     def sell_house(self, board, location_property):
         location_property = int(location_property)

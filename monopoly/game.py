@@ -16,7 +16,7 @@ import board_info
 # FIXME
 # Deal with 4-8 players
 # Have at max 2 G.o.o.J Cards
-# Colorama
+# Colorama, for board presentation
 # Auction Phase
 # Finish (T)rading
 # Check Mortgage for Type 2 (elec/Util)
@@ -253,20 +253,23 @@ class Game:
             if card[2] == "util":
                 if current_player.position > 28:
                     current_player.position = 12
+                    print("Passed GO, collect 200")
                     current_player.update_money(200)
                 elif current_player.position > 12:
                     current_player.position = 28
+                elif current_player.position < 12:
+                    current_player.position = 12
                 self.land_on_type2(current_player, board, die_roll)
             elif card[2] == "railroad":
-                if current_player.position > 5:
-                    current_player.position = 15
-                elif current_player.position > 15:
-                    current_player.position = 25
-                elif current_player.position > 25:
-                    current_player.position = 35
-                elif current_player.position > 35:
+                if current_player.position > 35:
                     current_player.position = 5
                     current_player.update_money(200)
+                elif current_player.position > 25:
+                    current_player.position = 35
+                elif current_player.position > 15:
+                    current_player.position = 25
+                elif current_player.position > 5:
+                    current_player.position = 15
                 self.land_on_type1(current_player, board)
             elif card[2] == "three":
                 current_player.position -= 3
@@ -354,10 +357,11 @@ class Game:
                     elif action[0] == 'U':
                         current_player.unmortgage_property(board, action[1], False)
                     elif action[0] == 'T':
-                        print("IN PROGRESS")
+                        _, trade_player, my_property_offers, trader_property_offers, my_money, trader_money = action
+                        print(f"Trade request sent between {current_player.symbol} and {trade_player.symbol}")
+                        
                         pass
                     elif action[0] == 'B':
-                        
                         current_player.buy_house(board, action[1])
                         print("Houses Now: ", current_player.houses)
                     elif action[0] == 'S':
