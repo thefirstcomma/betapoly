@@ -91,6 +91,7 @@ class Player:
                 print(board[prop][2], "(", prop, ")")
             property_offer = input("What properties do you want from" + trade_player.symbol +  "type ENTER for none: ")
             property_offer = property_offer.split(' ')
+            # property_offer = list(map(int, property_offer)) 
             # action = ["T", other_player, ["MY PROPERTY OFFER"], ["YOUR PROPERTY OFFER"], my_money, your_money]
 
             print("Opponent: ", trade_player.symbol, " unmortgaged properties: ")
@@ -101,6 +102,7 @@ class Player:
                 print(board[prop][2])
             property_desire = input("What properties are you offering?: ")
             property_desire = property_desire.split(' ')
+            # property_desire = list(map(int, property_desire)) 
 
             my_money = input("How much money are you giving " + trade_player.symbol + "? ")
             your_money = input("How much money is " + trade_player.symbol + " giving you? ")

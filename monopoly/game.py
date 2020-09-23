@@ -379,6 +379,8 @@ class Game:
                                                             trader_property_offers, curr_money, trader_money)
                         if trade_response == 'agree':
                             print("Agreed to trade")
+                            curr_money = int(curr_money)
+                            trader_money = int(trader_money)
                             current_player.update_money(-curr_money)
                             trade_player.update_money(curr_money)
                             current_player.update_money(trader_money)
@@ -473,17 +475,9 @@ class Game:
                 print(player.symbol, "money:", player.get_money(), "equity: ", player.total_equity)
             print("\n")
 
-            # for i,e in enumerate(self.owner_list):
-            #     if e is not 0 and e is not -1:
-            #         if board[i][0] == 0:
-            #             print(f"Color: {board[i][3]}, {board[i][2]} [{i}] - owned by {e.symbol}")
-            #         else:
-            #             print(f"UTIL/RR: {board[i][2]} [{i}] - owned by {e.symbol}")
-            # print("\n")
-
             for player in players:
                 print(player.symbol, "Properties: ")
-                tmp = reversed(sorted(player.property_in_use + player.property_in_mort))
+                tmp = sorted(player.property_in_use + player.property_in_mort)
                 for i in tmp:
                     if player.check_property_index_for_houses(i):
                         if i in player.property_in_mort:
