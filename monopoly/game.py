@@ -397,6 +397,9 @@ class Game:
                         print("Money: ", current_player.money)
                     elif action[0] == 'no_action':
                         prompt = "n"
+                    else:
+                        print("Didn't understand input!")
+                        prompt = 'n'
                 prompt = input("Do you want more actions? (y) or (n) ")
                 prompt = prompt.lower().strip()
             
@@ -470,12 +473,29 @@ class Game:
                 print(player.symbol, "money:", player.get_money(), "equity: ", player.total_equity)
             print("\n")
 
-            for i,e in enumerate(self.owner_list):
-                if e is not 0 and e is not -1:
-                    if board[i][0] == 0:
-                        print(f"Color: {board[i][3]}, {board[i][2]} [{i}] - owned by {e.symbol}")
+            # for i,e in enumerate(self.owner_list):
+            #     if e is not 0 and e is not -1:
+            #         if board[i][0] == 0:
+            #             print(f"Color: {board[i][3]}, {board[i][2]} [{i}] - owned by {e.symbol}")
+            #         else:
+            #             print(f"UTIL/RR: {board[i][2]} [{i}] - owned by {e.symbol}")
+            # print("\n")
+
+            for player in players:
+                print(player.symbol, "Properties: ")
+                tmp = reversed(sorted(player.property_in_use + player.property_in_mort))
+                for i in tmp:
+                    if player.check_property_index_for_houses(i):
+                        if i in player.property_in_mort:
+                            print(f'Color: {board[i][3]} - {board[i][2]} [{i}] - In Mortgage')
+                        else:
+                            print(f'Color: {board[i][3]} - {board[i][2]} [{i}]')
                     else:
-                        print(f"UTIL/RR: {board[i][2]} [{i}] - owned by {e.symbol}")
+                        if i in player.property_in_mort:
+                            print(f'Util/RR: {board[i][2]} [{i}] - In Mortgage')
+                        else:
+                            print(f'Util/RR: {board[i][2]} [{i}]')
+                print()
             print("\n")
 
             if not (rolled_double and current_player.in_jail == False):
@@ -484,6 +504,7 @@ class Game:
 
             self.turns += 1
             response = input("Press ENTER to Continue! >>")
+            response = response.strip()
             assert(response == '')
 
 

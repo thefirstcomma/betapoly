@@ -24,13 +24,19 @@ class Player:
 
     # Can return only 1 of 4 strings
     def get_out_jail_actions(self):
-        sad = input(f"Choose an Action for {self.symbol} between 1. PAY_50, 2. ROLL_DOUBLE, and 3. USE_JAIL_CARD\n>> ")
+        sad = ''
+        while sad != "PAY_50" and sad != "ROLL_DOUBLE" and sad != "USE_JAIL_CARD":
+            sad = input(f"Choose an Action for {self.symbol} between 1. PAY_50, 2. ROLL_DOUBLE, and 3. USE_JAIL_CARD\n>> ")
+            sad = sad
         return sad
 
     def player_buys_property(self, board):
-        action = input(f"Does {self.symbol} buy the {board[self.position][3]} property named: " 
-                    f"{board[self.position][2]} for ${board[self.position][1]} (Y/N) \n")
-        return action.lower().strip()
+        action = ''
+        while action != "y" and action != "n":
+            action = input(f"Does {self.symbol} buy the {board[self.position][3]} property named: " 
+            f"{board[self.position][2]} for ${board[self.position][1]} (Y/N) \n")
+            action = action.lower().strip()
+        return action
     
     def get_houses_and_hotels(self):
         hotel = 0
@@ -43,15 +49,20 @@ class Player:
         return (housing, hotel)
 
     def player_buys_railroad_utility(self, board):
-        action = input(f"Does {self.symbol} buy the railroad/util named: " 
-                    f"{board[self.position][2]} for ${board[self.position][1]} (Y/N) \n")
-        return action.lower().strip()
+        action = ''
+        while action != "y" and action != "n":
+            action = input(f"Does {self.symbol} buy the railroad/util named: " 
+                        f"{board[self.position][2]} for ${board[self.position][1]} (Y/N) \n")
+            action = action.lower().strip()
+        return action
 
     #  returns a List of actions
     def get_actions(self, players, board, sum_die, rolled_double):
         action = []
-        response = input("6 commands: Mortgage, UnMortgage, Trade, Buy Houses, Sell House, or (M, U, T, B, S) : ")
-        response = response.upper().strip()
+        response = ''
+        while response != "M" and response != "U" and response != "T" and response != "B" and response != "S": 
+            response = input("6 commands: Mortgage, UnMortgage, Trade, Buy Houses, Sell House, or (M, U, T, B, S) : ")
+            response = response.upper().strip()
         action.append(response)
         if response == 'M' and not self.has_no_property():
             for i in self.property_in_use:
@@ -78,7 +89,7 @@ class Player:
             print("Opponent: ", trade_player.symbol, " mortgaged properties:")
             for prop in self.property_in_mort:
                 print(board[prop][2], "(", prop, ")")
-            property_offer = input("What properties do you want from" + trade_player.symbol + ": ")
+            property_offer = input("What properties do you want from" + trade_player.symbol +  "type ENTER for none: ")
             property_offer = property_offer.split(' ')
             # action = ["T", other_player, ["MY PROPERTY OFFER"], ["YOUR PROPERTY OFFER"], my_money, your_money]
 
