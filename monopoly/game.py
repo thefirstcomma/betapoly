@@ -428,7 +428,7 @@ class Game:
         prompt = ""
         while prompt != 'n':
             if prompt == 'y':
-                action = current_player.get_actions(sum_die=-1, rolled_double=-1)
+                action = current_player.get_actions(self.players, sum_die=-1, rolled_double=-1)
                 if action[0] == 'M':
                     current_player.mortgage_property(action[1])
                 elif action[0] == 'U':

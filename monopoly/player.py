@@ -362,7 +362,7 @@ class Player:
                                 "offering you? - type ENTER or 0 for none: $")
             action.append(property_offer)
             action.append(property_desire)
-            action.append(my_money) 
+            action.append(my_money)
             action.append(your_money)
         elif response == 'S' and not self.has_no_property():
             total_prop = self.property_in_mort + self.property_in_use
