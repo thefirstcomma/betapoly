@@ -430,9 +430,9 @@ class Game:
             if prompt == 'y':
                 action = current_player.get_actions(self.players, sum_die=-1, rolled_double=-1)
                 if action[0] == 'M':
-                    current_player.mortgage_property(action[1])
+                    current_player.mortgage_property(action[1], self.players)
                 elif action[0] == 'U':
-                    current_player.unmortgage_property(action[1], False)
+                    current_player.unmortgage_property(action[1], False, self.players)
                 elif action[0] == 'T':
                     _, trade_player, curr_property_offers, trader_property_offers, curr_money, trader_money = action
                     print(f"Trade request sent between {current_player.symbol} and {trade_player.symbol}")
@@ -459,10 +459,10 @@ class Game:
                         print(trade_player.symbol, "has disagreed the trade offer!")
                         print("You can request another Trade offer... or not.")
                 elif action[0] == 'B':
-                    current_player.buy_house(action[1])
+                    current_player.buy_house(action[1], self.players)
                     print("Houses Now: ", current_player.print_houses())
                 elif action[0] == 'S':
-                    current_player.sell_house(action[1])
+                    current_player.sell_house(action[1], self.players)
                     print("Houses Now: ", current_player.print_houses())
                     print("Money: ", current_player.money)
                 elif action[0] == 'no_action':

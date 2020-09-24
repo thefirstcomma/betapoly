@@ -254,7 +254,7 @@ class Player:
             if e > 0:
                 print(f'{self.board[i][2]} [{i}] {e} houses')
 
-    def buy_house(self, location_property):
+    def buy_house(self, location_property, players):
         location_property = int(location_property)
         if self.houses[location_property] >= 5:
             print("Cannot buy more than a hotel!")
@@ -265,12 +265,12 @@ class Player:
         elif self.is_monopoly(location_property):
             print("This property is a monopoly! Buying!")
             self.houses[location_property] += 1
-            self.update_money(-self.board[location_property][10])
+            self.update_money(-self.board[location_property][10], players)
             self.update_equity(-self.board[location_property][10] // 2)
         else:
             print("Not a monopoly property!")
         
-    def sell_house(self, location_property):
+    def sell_house(self, location_property, players):
         location_property = int(location_property)
         if self.houses[location_property] <= 0:
             print("Cannot sell 0 houses!")
@@ -280,20 +280,20 @@ class Player:
             print(f"Can't sell multiple houses in a non-row fashion.")
         elif self.is_monopoly(location_property):
             self.houses[location_property] -= 1
-            self.update_money(self.board[location_property][10]//2)
+            self.update_money(self.board[location_property][10]//2, players)
         else:
             print("YOU SHOULD NEVER EVER SEE THIS PRINT MESSAGE @(PLAYERS.SELL_HOUSE)")
 
     # FIXME - Cannot mortgage a property with houses on it.
-    def mortgage_property(self, location_property):
+    def mortgage_property(self, location_property, players):
         location_property = int(location_property)
         self.property_in_use.remove(location_property)
         self.property_in_mort.append(location_property)
         print(f"Mortgaged this property {self.board[location_property][2]} received: ${self.board[location_property][1] // 2} money")
-        self.update_money(self.board[location_property][1]//2)
+        self.update_money(self.board[location_property][1]//2, players)
 
     # FIXME MUST DEAL WITH NEW_PLAYER_UNMORTGAGE == TRUE
-    def unmortgage_property(self, location_property, new_player_unmortgage):
+    def unmortgage_property(self, location_property, new_player_unmortgage, players):
         location_property = int(location_property)
         if new_player_unmortgage:
             print("Received a new mortgaged property from a player!")
@@ -303,7 +303,7 @@ class Player:
         self.property_in_mort.remove(location_property)
         ten_percent_interest = math.ceil((self.board[location_property][1] // 2) * .1)
         cost_plus_ten_percent_interest = (self.board[location_property][1] // 2) + ten_percent_interest
-        self.update_money(-cost_plus_ten_percent_interest)
+        self.update_money(-cost_plus_ten_percent_interest, players)
         self.update_equity(-ten_percent_interest)
         
     def get_money(self):
