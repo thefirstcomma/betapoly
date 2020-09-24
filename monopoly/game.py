@@ -16,12 +16,9 @@ import board_info
 # FIXME
 # Deal with 4-8 players, get_current_player(self, players)
 # Have at max 2 G.o.o.J Cards
-# Colorama, for board presentation
 # Auction Phase
 # Finish (T)rading
-# Check Mortgage for Type 2 (elec/Util)
 # Need to update Income tax to be possible 10% worth vs $200.00 (in type3)
-# Check printing overall throughout the Game
 # Auction for housing, limit housing=32, hotels=12, and everytime someone buys/sells houses, iterate player actions.
 # Fix Game__init__() for player# parameter/input
 # Add a state for Player -> .open_for_trading()
@@ -528,7 +525,11 @@ class Game:
                     current_player.in_jail = False
                     current_player.turns_in_jail = 0
                 else:
-                    print("You cannot do that, resources unavailable or wrong command.")
+                    print("You cannot do that, resources unavailable or wrong command. Your turn will restart!\n")
+                    current_player.turns_in_jail -= 1
+                    if number_doubles > 0:
+                        number_doubles -= 1
+                    continue
 
             if number_doubles >= 3:
                 print(current_player.symbol, "ROLLED 3 DOUBLES consecutively, move to Jail for speeding!")
