@@ -236,6 +236,7 @@ class Player:
             return ["no_action"]
         return action
 
+    #FIXME print values, should look cleaner
     def agree_disagree_trade(self, other_player, their_property, my_property, their_money, my_money):
         print("\nPlayer is Offering: ")
         for i in their_property:
@@ -243,7 +244,7 @@ class Player:
         print("For your property of: ")
         for i in my_property:
             print(f'  -{self.board[i][2]} [{i}]')
-        print("AND")
+        print("\nAND\n")
         print(f'{other_player.symbol} Offers: ${their_money} for your ${my_money}')
         action = input(f"Do you agree to the trade offered by {other_player.symbol}?"
                         f" Type 'agree' or 'disagree' ")
@@ -293,18 +294,21 @@ class Player:
         self.update_money(self.board[location_property][1]//2, players)
 
     # FIXME MUST DEAL WITH NEW_PLAYER_UNMORTGAGE == TRUE
-    def unmortgage_property(self, location_property, new_player_unmortgage, players):
+    def unmortgage_property(self, location_property, players):
         location_property = int(location_property)
-        if new_player_unmortgage:
-            print("Received a new mortgaged property from a player!")
-            print("Unmortgage now (10%) or pay an xtra (10%) later!")
-
         self.property_in_use.append(location_property)
         self.property_in_mort.remove(location_property)
         ten_percent_interest = math.ceil((self.board[location_property][1] // 2) * .1)
         cost_plus_ten_percent_interest = (self.board[location_property][1] // 2) + ten_percent_interest
         self.update_money(-cost_plus_ten_percent_interest, players)
         self.update_equity(-ten_percent_interest)
+    
+    def might_pay_10_percent_extra_mortgaged_property(self, loc_property):
+        print("Received a new mortgaged property from a player!")
+        print("Unmortgage now (10%) or pay an xtra (10%) later!")
+        print("Property named:", self.board[loc_property][2])
+        prompt = input("Do you want to unmortgage this property right away. (y, n)")
+        return prompt 
         
     def get_money(self):
         return self.money

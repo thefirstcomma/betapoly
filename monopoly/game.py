@@ -16,12 +16,10 @@ import board_info
 # FIXME
 # Deal with 4-8 players, get_current_player(self, players)
 # Have at max 2 G.o.o.J Cards
-# Auction Phase
 # Finish (T)rading
 # Need to update Income tax to be possible 10% worth vs $200.00 (in type3)
 # Auction for housing, limit housing=32, hotels=12, and everytime someone buys/sells houses, iterate player actions.
 # Fix Game__init__() for player# parameter/input
-# Add a state for Player -> .open_for_trading()
 
 class Game:
     def __init__(self):
@@ -81,7 +79,7 @@ class Game:
                         f"{self.board[current_player.position][2]}\n")
             elif action == "n" or action == "N":
                 # TODO: Auction phase, more parameters
-                self.auction_phase()
+                self.auction_phase(current_player.position)
         else: #The case where we have a property owner
             loc = current_player.position
             if loc not in curr_property_owner.property_in_mort:
@@ -128,7 +126,7 @@ class Game:
                 print(f"{current_player.symbol} bought RailRoad property: {self.board[current_player.position][2]}\n")
             elif action == "N" or action == "n":
                 # TODO needs more parameters
-                self.auction_phase()
+                self.auction_phase(current_player.position)
         else: # Assuming no houses/hotel is bought
             loc = current_player.position
             if loc not in curr_property_owner.property_in_mort:
@@ -169,7 +167,7 @@ class Game:
                 print(f"{current_player.symbol} bought Water-Works / Electric property: {self.board[current_player.position][2]}\n")
             elif action == "N" or action == "n":
                 # TODO WORK ON parameters for auction phase
-                self.auction_phase()
+                self.auction_phase(current_player.position)
         else:
             loc = current_player.position
             if loc not in curr_property_owner.property_in_mort:
@@ -316,8 +314,39 @@ class Game:
                 self.check_landed_on_type(current_player, die_roll)
 
     # TODO Need this auction parameters
-    def auction_phase(self):
-        pass
+    def auction_phase(self, prop_index):
+        print("\nEntered an auction!!!!\n")
+        auction_state = [True for x in self.players]
+        highest_price = 0
+        player_with_highest_bid = None
+        while sum(auction_state) > 1:
+            # Only iterates through the players who don't have the highest bid
+            for player in list(filter(lambda a: a != player_with_highest_bid, self.players)):
+                raise_price = input("Does " + player.symbol + " want to buy " + self.board[prop_index][2] + " (Y/N) ")
+                raise_price = raise_price.upper()
+                if raise_price == "Y":
+                    action = -1
+                    while (action <= highest_price):
+                        print("Highest price: ", highest_price)
+                        action = input("What is the price that " + player.symbol + " bids for " + self.board[prop_index][2] + "?  $")
+                        try:
+                            action = int(action)
+                        except ValueError:
+                            print("User didn't input a valid number.")
+                    highest_price = action
+                    player_with_highest_bid = player
+                    auction_state = [True for x in self.players]
+                    break
+                elif raise_price == "N":
+                    auction_state[int(player.symbol[2]) - 1] = False
+                else:
+                    print("Did not understand what you wanted to do, (y/n) ONLY >>")
+        
+        player_with_highest_bid.update_money(-highest_price, self.players)
+        player_with_highest_bid.update_equity(-highest_price + int(self.board[prop_index][1]/2))
+        player_with_highest_bid.property_in_use.append(prop_index)
+        print(f"\nCongratulations {player_with_highest_bid.symbol} bought {self.board[prop_index][2]}"
+                f" for ${highest_price}!")
             
     def print_board(self):
         mini_board = [["F.P.", "-", "-", "-", "-", "-", "-", "-", "-", "-", "G.T.J"],
@@ -429,17 +458,34 @@ class Game:
                 if action[0] == 'M':
                     current_player.mortgage_property(action[1], self.players)
                 elif action[0] == 'U':
-                    current_player.unmortgage_property(action[1], False, self.players)
+                    current_player.unmortgage_property(action[1], self.players)
                 elif action[0] == 'T':
                     _, trade_player, curr_property_offers, trader_property_offers, curr_money, trader_money = action
                     print(f"Trade request sent between {current_player.symbol} and {trade_player.symbol}")
-                    curr_property_offers = list(map(int, curr_property_offers)) 
-                    trader_property_offers = list(map(int, trader_property_offers)) 
+                    try:
+                        curr_property_offers.remove('')
+                    except ValueError:
+                        print("")
+                    try:
+                        trader_property_offers.remove('')
+                    except ValueError:
+                        print("")
+                    if curr_property_offers:
+                        curr_property_offers = list(map(int, curr_property_offers)) 
+                    if trader_property_offers:
+                        trader_property_offers = list(map(int, trader_property_offers)) 
                     trade_response = trade_player.agree_disagree_trade(current_player, curr_property_offers,
                                                         trader_property_offers, curr_money, trader_money)
                     if trade_response == 'agree':
                         print("Agreed to trade")
-                        curr_money, trader_money = int(curr_money), int(trader_money)
+                        try:
+                            curr_money = int(curr_money)
+                        except ValueError:
+                            curr_money = 0
+                        try:
+                            trader_money = int(trader_money)
+                        except ValueError:
+                            trader_money = 0
                         current_player.update_money(-curr_money, self.players)
                         current_player.update_equity(-curr_money)
                         trade_player.update_money(curr_money, self.players)
@@ -450,8 +496,47 @@ class Game:
                         trade_player.update_equity(-trader_money)
                         print(f"{current_player.symbol} ${current_player.money}, "
                                 f"{current_player.symbol} ${trade_player.money}")
-                        print("----Work on property transferring here-----")
-                        # TODO :(
+
+                        # FIXME :()
+                        for i in trader_property_offers:
+                            print(i, "WOWOWOWOWOWOWOW")
+                            if i in trade_player.property_in_use:
+                                trade_player.property_in_use.remove(i)
+                                current_player.property_in_use.append(i)
+                            elif i in trade_player.property_in_mort:
+                                trade_playertrade_player.property_in_mort.remove(i)
+                                current_player.property_in_mort.append(i)
+                                response = current_player.might_pay_10_percent_extra_mortgaged_property(i)
+                                if response == 'y':
+                                    current_player.unmortgage_property(i, self.players)
+                                elif response == 'n':
+                                    ten_percent_interest = math.ceil((self.board[i][1] // 2) * .1)
+                                    current_player.update_money(-ten_percent_price, self.players)
+                                    current_player.update_equity(-ten_percent_price)
+                                else:
+                                    print("Didn't understand prompt to unmortgage!")
+                            else:
+                                print("Player doesn't own this property to trade!")
+                        
+                        for i in curr_property_offers:
+                            print(i, "WOWOWOWOWOWOWOW")
+                            if i in current_player.property_in_use:
+                                current_player.property_in_use.remove(i)
+                                trade_player.property_in_use.append(i)
+                            elif i in current_player.property_in_mort:
+                                current_player.property_in_mort.remove(i)
+                                trade_player.property_in_mort.append(i)
+                                response = trade_player.might_pay_10_percent_extra_mortgaged_property(i)
+                                if response == 'y':
+                                    trade_player.unmortgage_property(i, self.players)
+                                elif response == 'n':
+                                    ten_percent_interest = math.ceil((self.board[i][1] // 2) * .1)
+                                    trade_player.update_money(-ten_percent_price, self.players)
+                                    trade_player.update_equity(-ten_percent_price)
+                                else:
+                                    print("Didn't understand prompt to unmortgage!")
+                            else:
+                                print("Player doesn't own this property to trade!")
                     else:
                         print(trade_player.symbol, "has disagreed the trade offer!")
                         print("You can request another Trade offer... or not.")
