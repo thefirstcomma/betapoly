@@ -1,0 +1,2 @@
+from gym_monopoly.envs.monopoly_env import MonopolyEnv
+from gym_monopoly.envs.monopoly_extrahard_env import MonopolyExtraHardEnv
