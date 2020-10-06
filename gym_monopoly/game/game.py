@@ -1,37 +1,42 @@
 import random
 import time
+import math
 from colorama import Fore, Style
-import player
-import board_info
+from gym_monopoly.game.player import player
+from gym_monopoly.game.board_info import board_info
 
-# Turn Examples:
+# An Example Turn:
 #     actions() -> [List]
 #     rolldie()
 #         -buy_property_landed_on()
 #             -possible_auction()
-#             -actions() -> [List]
+#                -actions() -> [List]
 #         -possible_pay_rent()
 #     actions() -> [List]
 
 # FIXME
-# Deal with 4-8 players, get_current_player(self, players)
 # Have at max 2 G.o.o.J Cards
-# Finish (T)rading
 # Need to update Income tax to be possible 10% worth vs $200.00 (in type3)
-# Auction for housing, limit housing=32, hotels=12, and everytime someone buys/sells houses, iterate player actions.
-# Fix Game__init__() for player# parameter/input
+# Auction for housing, limit housing=32, hotels=12, -- everytime someone buys/sells houses, iterate player actions.
+
 
 class Game:
-    def __init__(self):
+
+    def __init__(self, player1, player2, player3, player4):
+        self.WON_MONOPOLY = None
+        self.DONE = True
+
         self.board = board_info.BOARD
         self.chance_cards = []
         self.comm_cards = []
         self.player_turn_indicator = 0
         self.turns = 1
-        self.numb_players = 2
+        self.numb_players = 4
         p1 = player.Player("(P1)")
         p2 = player.Player("(P2)")
-        self.players = [p1, p2]
+        p3 = player.Player("(P3)")
+        p4 = player.Player("(P4)")
+        self.players = [p1, p2, p3, p4]
         # -1 == not buyable, 0 == buyable, player.symbol == bought
         self.owner_list = [-1, 0, -1, 0, -1, 0, 0, -1, 0, 0, 
                             -1, 0, 0, 0, 0, 0, 0, -1, 0, 0, 
@@ -47,7 +52,8 @@ class Game:
     
     # TODO Only works for 2 players right now
     def get_current_player(self):
-        return self.players[0] if self.player_turn_indicator % self.numb_players == 0 else self.players[1]
+        return self.players[self.player_turn_indicator % self.numb_players]
+    
     
     def move_player(self, player, sum_die):
         player.position += sum_die
@@ -504,20 +510,21 @@ class Game:
                                 trade_player.property_in_use.remove(i)
                                 current_player.property_in_use.append(i)
                             elif i in trade_player.property_in_mort:
-                                trade_playertrade_player.property_in_mort.remove(i)
+                                trade_player.property_in_mort.remove(i)
                                 current_player.property_in_mort.append(i)
                                 response = current_player.might_pay_10_percent_extra_mortgaged_property(i)
                                 if response == 'y':
                                     current_player.unmortgage_property(i, self.players)
                                 elif response == 'n':
                                     ten_percent_interest = math.ceil((self.board[i][1] // 2) * .1)
-                                    current_player.update_money(-ten_percent_price, self.players)
-                                    current_player.update_equity(-ten_percent_price)
+                                    current_player.update_money(-ten_percent_interest, self.players)
+                                    current_player.update_equity(-ten_percent_interest)
                                 else:
                                     print("Didn't understand prompt to unmortgage!")
                             else:
                                 print("Player doesn't own this property to trade!")
                         
+                        # FIXME, error in trades
                         for i in curr_property_offers:
                             print(i, "WOWOWOWOWOWOWOW")
                             if i in current_player.property_in_use:
@@ -531,8 +538,8 @@ class Game:
                                     trade_player.unmortgage_property(i, self.players)
                                 elif response == 'n':
                                     ten_percent_interest = math.ceil((self.board[i][1] // 2) * .1)
-                                    trade_player.update_money(-ten_percent_price, self.players)
-                                    trade_player.update_equity(-ten_percent_price)
+                                    trade_player.update_money(-ten_percent_interest, self.players)
+                                    trade_player.update_equity(-ten_percent_interest)
                                 else:
                                     print("Didn't understand prompt to unmortgage!")
                             else:
@@ -649,8 +656,8 @@ class Game:
             self.turns += 1
 
 
-
 if __name__ == "__main__":
+    print("Started Game")
     game = Game()
     game.run()
 
