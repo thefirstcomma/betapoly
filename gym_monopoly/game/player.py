@@ -2,7 +2,7 @@ import time
 import math
 from operator import add
 from itertools import zip_longest
-from gym_monopoly.game.board_info import board_info
+import board_info
 
 class Player:
     def __init__(self, string_symbol):

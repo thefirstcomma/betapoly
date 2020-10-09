@@ -1,8 +1,8 @@
 import random
 import time
 from colorama import Fore, Style
-from gym_monopoly.game.player import player
-from gym_monopoly.game.board_info import board_info
+import player
+import board_info
 import math
 # import player
 # import board_info
@@ -24,7 +24,7 @@ import math
 
 class Game:
 
-    def __init__(self, player1, player2, player3, player4):
+    def __init__(self):
         self.WON_MONOPOLY = None
         self.DONE = True
 

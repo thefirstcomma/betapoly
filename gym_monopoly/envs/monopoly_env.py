@@ -6,17 +6,6 @@ from gym import utils
 from gym.utils import seeding
 from gym_monopoly.game.game import Game
 
-# env = gym.make('gym_monopoly:monopoly-v0')
-# env.reset()
-# for _ in range(1000):
-#     env.render()
-#     player = env.get_player()
-#     if player == 'ai':
-#         action = [0, 1, None, None]
-#         env.step(env.action_space.sample()) # take a random action
-#     else:
-#         env.human_step() -> input()
-# env.close()
 
 class MonopolyEnv(gym.Env):
     """Custom Environment that follows gym interface"""
