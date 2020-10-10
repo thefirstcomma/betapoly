@@ -25,13 +25,11 @@ class MonopolyEnv(gym.Env):
                                           spaces.Box(low=0, high=100, shape=1),
                                           spaces.Box(low=-180, high=180, shape=1)
                                         ))
-        self.prev_action = None
+        # self.prev_action = None
 
     def step(self, action):
+        self.env.action_helper(action)
         obs = self.env.get_state()
-        # apply action in the game
-        self.env.action_helper(obs[2] % 4, self.prev_action, action)
-        self.prev_action = action
         reward = self.get_reward()
         done = self.env.game_over()
         return obs, reward, done, {}
@@ -80,18 +78,17 @@ class MonopolyEnv(gym.Env):
     
     # Reward only for winning?
     def get_reward(self):
-        if self.status == hfo_py.WON_MONOPOLY:
+        if self.status == self.env.WON_MONOPOLY:
             return 1
         else:
             return -1
 
     def reset(self):
-        self.env.reset()
+        observation = self.env.reset()
         return observation  # reward, done, info can't be included
 
-    # Nothing happens here
-    def render(self, mode='human'):
-        pass
+    def render(self):
+        self.env.print_info()
 
     # Nothing here since no actual gui
     def close(self):

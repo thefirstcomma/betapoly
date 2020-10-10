@@ -5,7 +5,9 @@ from itertools import zip_longest
 import board_info
 
 class Player:
-    def __init__(self, string_symbol):
+    def __init__(self, number):
+        self.player_number = number
+        self.symbol = "(P" + str(number) + ")"
         self.board = board_info.BOARD
         self.position = 0
         self.property_in_use = [] 
@@ -15,9 +17,9 @@ class Player:
         self.in_jail = False
         self.turns_in_jail = 0
         self.get_out_jail_card = 0
-        self.symbol = string_symbol
         self.houses = [0]*40 # 1-5, 5 == hotel
         self.rolled_dice_this_turn = False
+        self.rolled_number_doubles = 0
 
     def get_symbol(self):
         return self.symbol

@@ -23,34 +23,31 @@ import board_info
 
 
 class Game:
-
     def __init__(self):
         self.WON_MONOPOLY = None
-        self.DONE = True
-
         self.board = board_info.BOARD
         self.chance_cards = []
         self.comm_cards = []
-        self.player_turn_indicator = 0
         self.turns = 1
         self.numb_players = 4
-        p1 = player.Player("(P1)")
-        p2 = player.Player("(P2)")
-        p3 = player.Player("(P3)")
-        p4 = player.Player("(P4)")
+        p1 = player.Player(1)
+        p2 = player.Player(2)
+        p3 = player.Player(3)
+        p4 = player.Player(4)
         self.players = [p1, p2, p3, p4]
-        # -1 == not buyable, 0 == buyable, player.symbol == bought
         self.total_houses = 32
         self.total_hotels = 12
+        self.current_player = self.players[0]
+    
+    # self.current_player = self.players[(self.get_current_player.number + 1) % 4]
 
     def roll_dice(self):
         first_roll = random.randint(1,6)
         second_roll = random.randint(1,6)
         return (first_roll + second_roll, first_roll == second_roll)
-    
+
     def get_current_player(self):
-        return self.players[self.player_turn_indicator % self.numb_players]
-    
+        return self.current_player
     
     def move_player(self, player, sum_die):
         player.position += sum_die
@@ -677,17 +674,15 @@ class Game:
         return player.rolled_dice_this_turn
 
     # action = [0, None, None, None, 1, None]
-    # obs -> status of jail, go_again_next_turn, board_properties, player_money, 
-    def action_helper(self, player_index, prev_action, action):
-        player = self.players[player_index]
+    # obs -> self.players, go_again_next_turn, board_properties, player_money, player_turn
+    def action_helper(self, action):
+        player = self.get_current_player()
         action_type = ACTION_LOOKUP[action[0]]
+
         if not self.validate_move(player, action):
             print(f"Failed to do a Valid Move")
             return
-        
-        if prev_action == 'END' :
-            sum_die, rolled_double = self.roll_dice()
-        
+
         if [action_type] == 'BUY_PROPERTY_LANDED':
             player.player_buys_property(action[2])
         elif action_type == 'IN_JAIL_ACTION':
@@ -706,12 +701,29 @@ class Game:
             self.act(action[3])
         elif action_type == 'SELL_HOUSE':
             self.act(action[4])
-        elif action[0] == 8:
-            pass
-        elif action[0] == 9:
-            pass
+        elif action[0] == 'END':
+            self.print_property_and_money()
+        elif action[0] == 'ROLL-DICE':
+            sum_die, rolled_double = self.roll_dice()
+            if rolled_double:
+                player.rolled_number_doubles += 1
+            else:
+                player.rolled_number_doubles = 0
+            # Go to jail for 3 doubles in a roll
+            if player.rolled_number_doubles >= 3:
+                print(player.symbol, "ROLLED 3 DOUBLES consecutively, move to Jail for speeding!")
+                self.land_on_type5(player)
+                player.rolled_number_doubles = 0
+                self.turns += 1
+                self.current_player = self.players[(player.number + 1) % 4]
+            else:
+                self.move_player(self.current_player, sum_die)
         else:
             print('Unrecognized action %d' % action_type)
+    
+    def print_info(self):
+        self.print_board()
+        self.print_property_and_money()
 
 
 if __name__ == "__main__":
