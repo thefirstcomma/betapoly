@@ -2,6 +2,8 @@ import time
 import math
 from operator import add
 from itertools import zip_longest
+
+from numpy.lib.nanfunctions import nanmax
 import board_info
 
 class Player:
@@ -25,20 +27,28 @@ class Player:
         return self.symbol
 
     def is_bankrupt(self):
-        return self.total_equity < 0
+        return self.money < 0
 
     # Can return only 1 of 4 strings
     def get_out_jail_actions(self):
         print(f'Get out of Jail Cards: {self.get_out_jail_card}\n')
         return input(f"{self.symbol} must 1.PAY_50, 2.ROLL_DOUBLE, or 3.USE_JAIL_CARD >>")
 
-    def player_buys_property(self):
-        action = ''
-        while action != "y" and action != "n":
-            action = input(f"Does {self.symbol} buy the {self.board[self.position][3]} property named: " 
+    def player_buys_property(self, binary):
+        print(f"Does {self.symbol} buy the {self.board[self.position][3]} property named: " 
             f"{self.board[self.position][2]} for ${self.board[self.position][1]} (Y/N) \n")
-            action = action.lower().strip()
-        return action
+        if binary == 1:
+            return "y"
+        elif binary == 0:
+            return "n"
+        else:
+            pass
+        # action = ''
+        # while action != "y" and action != "n":
+        #     action = input(f"Does {self.symbol} buy the {self.board[self.position][3]} property named: " 
+        #     f"{self.board[self.position][2]} for ${self.board[self.position][1]} (Y/N) \n")
+        #     action = action.lower().strip()
+        # return action
     
     def get_houses_and_hotels(self):
         hotel = 0
@@ -258,52 +268,68 @@ class Player:
             if e > 0:
                 print(f'{self.board[i][2]} [{i}] {e} houses')
 
-    def buy_house(self, location_property, players):
+    def buy_house(self, location_property):
+        location_property = int(location_property)
+        self.houses[location_property] += 1
+        self.update_money(-self.board[location_property][10])
+        self.update_equity(-self.board[location_property][10] // 2)
+    
+    def buyable(self, location_property):
         location_property = int(location_property)
         if self.houses[location_property] >= 5:
             print("Cannot buy more than a hotel!")
+            return False
         elif not self.check_property_index_for_houses(location_property):
             print(f"Can't buy/sell houses on Railroad or Utility")
+            return False
         elif not self.buy_numb_houses_is_good(location_property):
             print(f"Can't build multiple houses in a non-row fashion.")
+            return False
         elif self.is_monopoly(location_property):
             print("This property is a monopoly! Buying!")
-            self.houses[location_property] += 1
-            self.update_money(-self.board[location_property][10], players)
-            self.update_equity(-self.board[location_property][10] // 2)
+            return True
         else:
-            print("Not a monopoly property!")
+            return False
         
-    def sell_house(self, location_property, players):
+    def sell_house(self, location_property):
+        location_property = int(location_property)
+        self.houses[location_property] -= 1
+        self.update_money(self.board[location_property][10] // 2)
+
+    def sellable(self, location_property):
         location_property = int(location_property)
         if self.houses[location_property] <= 0:
             print("Cannot sell 0 houses!")
+            return False
         elif not self.check_property_index_for_houses(location_property):
             print(f"Can't buy/sell houses on Railroad or Utility")
+            return False
         elif not self.sell_numb_houses_is_good(location_property):
             print(f"Can't sell multiple houses in a non-row fashion.")
+            return False
         elif self.is_monopoly(location_property):
-            self.houses[location_property] -= 1
-            self.update_money(self.board[location_property][10]//2, players)
+            print("This property is sellable! Selling")
+            return True
         else:
-            print("YOU SHOULD NEVER EVER SEE THIS PRINT MESSAGE @(PLAYERS.SELL_HOUSE)")
+            return False
+
 
     # FIXME - Cannot mortgage a property with houses on it.
-    def mortgage_property(self, location_property, players):
+    def mortgage_property(self, location_property):
         location_property = int(location_property)
         self.property_in_use.remove(location_property)
         self.property_in_mort.append(location_property)
         print(f"Mortgaged this property {self.board[location_property][2]} received: ${self.board[location_property][1] // 2} money")
-        self.update_money(self.board[location_property][1]//2, players)
+        self.update_money(self.board[location_property][1]//2)
 
     # FIXME MUST DEAL WITH NEW_PLAYER_UNMORTGAGE == TRUE
-    def unmortgage_property(self, location_property, players):
+    def unmortgage_property(self, location_property):
         location_property = int(location_property)
         self.property_in_use.append(location_property)
         self.property_in_mort.remove(location_property)
         ten_percent_interest = math.ceil((self.board[location_property][1] // 2) * .1)
         cost_plus_ten_percent_interest = (self.board[location_property][1] // 2) + ten_percent_interest
-        self.update_money(-cost_plus_ten_percent_interest, players)
+        self.update_money(-cost_plus_ten_percent_interest)
         self.update_equity(-ten_percent_interest)
     
     def might_pay_10_percent_extra_mortgaged_property(self, loc_property):
@@ -316,72 +342,11 @@ class Player:
     def get_money(self):
         return self.money
     
-    def update_money(self, value, players):
+    def update_money(self, value):
         while (self.money + value <= 0):
             print("\nYou don't have enough money!\n Must sell homes, mortgage, or trade property!")
             action = input()
-            self.forced_get_money(players)
         self.money += value
-    
-    # This method is the ONLY METHOD that cheats by not calling update_money() and instead self.money*
-    def forced_get_money(self, players):
-        action = []
-        response = input("3 commands: (M)ortgage, (T)rade, (S)ell Houses: ")
-        action.append(response.upper().strip())
-        if response == 'M' and not self.has_no_property():
-            for i in self.property_in_use:
-                print(f"{self.board[i][2]} [{i}]")
-            get_index = input("What index property do you want to mortgage : ")
-            action.append(get_index)
-        elif response == 'T':
-            get_player = input("What player are you trading with (P#) ")
-            other_player = '(P' + get_player + ')'
-            trade_player = ":)"
-            for player in players:
-                if player.symbol == other_player.upper():
-                    trade_player = player
-                    action.append(trade_player)
-                    break
-            print("Opponent: ", trade_player.symbol, " regular properties:")
-            for prop in trade_player.property_in_use:
-                print(f'  -{self.board[prop][2]} [{prop}]')
-            print("Opponent: ", trade_player.symbol, " mortgaged properties:")
-            for prop in trade_player.property_in_mort:
-                print(f'  -{self.board[prop][2]} [{prop}]')
-            property_offer = input("\nWhat property(s) do you want from " + trade_player.symbol +  
-                                    " - type ENTER for none: ")
-            property_offer = property_offer.split(' ')
-            # property_offer = list(map(int, property_offer)) 
-            print(self.symbol, " regular properties: ")
-            for prop in self.property_in_use:
-                print(f'  -{self.board[prop][2]} [{prop}]')
-            print(self.symbol, " mortgaged properties: ")
-            for prop in self.property_in_mort:
-                print(f'  -{self.board[prop][2]} [{prop}]')
-            property_desire = input("\nWhat property(s) are you offering?: type ENTER for none: ")
-            property_desire = property_desire.split(' ')
-            # property_desire = list(map(int, property_desire)) 
-            print(f'\nYour money: {self.money}')
-            print(f'Their money: {trade_player.money}\n')
-            my_money = input("How much money are you offering " + trade_player.symbol +  
-                                " - type ENTER or 0 for none: $")
-            your_money = input("How much money is " + trade_player.symbol +  
-                                "offering you? - type ENTER or 0 for none: $")
-            action.append(property_offer)
-            action.append(property_desire)
-            action.append(my_money)
-            action.append(your_money)
-        elif response == 'S' and not self.has_no_property():
-            total_prop = self.property_in_mort + self.property_in_use
-            total_prop = self.remove_non_housing_property(total_prop)
-            for i in total_prop:
-                print(f"{self.board[i][2]} [{i}] \t\t# houses: {self.houses[i]}")
-            get_index = input("What property do you want to sell a house on? ")
-            action.append(get_index)
-        else:
-            print(f"No action was prompted or {self.symbol} has no property, can only (T)rade")
-            return ["no_action"]
-        return action
     
     def update_equity(self, value):
         self.total_equity += value

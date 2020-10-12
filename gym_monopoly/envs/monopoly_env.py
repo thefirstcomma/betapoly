@@ -15,7 +15,6 @@ class MonopolyEnv(gym.Env):
     def __init__(self):
         super(MonopolyEnv, self).__init__()
         self.env = Game()
-        self.players = []
         self.observation_space = spaces.Box(low=-1, high=1,
                                             shape=(self.env.getStateSize()))
         self.action_space = spaces.Tuple((spaces.Discrete(3),
@@ -24,22 +23,20 @@ class MonopolyEnv(gym.Env):
                                           spaces.Box(low=-180, high=180, shape=1),
                                           spaces.Box(low=0, high=100, shape=1),
                                           spaces.Box(low=-180, high=180, shape=1)
-                                        ))
+                                        )) 
         # self.prev_action = None
 
     def step(self, action):
         self.env.action_helper(action)
         obs = self.env.get_state()
         reward = self.get_reward()
-        done = self.env.game_over()
+        done = self.env.game_ended()
         return obs, reward, done, {}
-        # return observation, reward, done, info
-
     
     # indexes of the list of action {
     #     0 : Type For ACTION_LOOKUP
     #     1 : PAY 50 FOR JAIL (0)/ ROLL DOUBLE (1)/ USE G.O.O.J CARD (2)
-    #     2 : BUY / DONT BUY INDEX PROPERTY LANDED ON
+    #     2 : DONT BUY / BUY INDEX PROPERTY LANDED ON   [0,1]
     #     3 : BUY HOUSE ON THIS INDEX
     #     4 : SELL HOUSE ON THIS INDEX
     #     5 : MORTGAGE ON THIS INDEX
@@ -81,7 +78,7 @@ class MonopolyEnv(gym.Env):
         if self.status == self.env.WON_MONOPOLY:
             return 1
         else:
-            return -1
+            return -.008
 
     def reset(self):
         observation = self.env.reset()
