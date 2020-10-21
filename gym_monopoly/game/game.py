@@ -2,8 +2,8 @@ import random
 import time
 import math
 from colorama import Fore, Style
-import player
-import board_info
+from gym_monopoly.game.player import Player
+from gym_monopoly.game.board_info import BOARD
 
 # An Example Turn:
 #     actions() -> [List]
@@ -25,19 +25,18 @@ import board_info
 class Game:
     def __init__(self):
         self.WON_MONOPOLY = None
-        self.board = board_info.BOARD
+        self.board = BOARD
         self.chance_cards = []
         self.comm_cards = []
         self.turns = 1
-        p1 = player.Player(1)
-        p2 = player.Player(2)
-        p3 = player.Player(3)
-        p4 = player.Player(4)
+        p1 = Player(1)
+        p2 = Player(2)
+        p3 = Player(3)
+        p4 = Player(4)
         self.players = [p1, p2, p3, p4]
         self.total_houses = 32
         self.total_hotels = 12
         self.current_player = self.players[0]
-        self.initial_trade_player
 
     def roll_dice(self):
         first_roll = random.randint(1,6)
@@ -72,7 +71,7 @@ class Game:
             print(f"Landed on property you {current_player.symbol} already owns.")
         elif curr_property_owner == None:
             print(current_player.symbol, "Current money:", current_player.money)
-            action = current_player.player_buys_property()
+            action = current_player.player_buys_property(current_player.position)
             if (action == "y" or action == "Y") and (current_player.money > self.board[current_player.position][1]):
                 current_player.update_money(-self.board[current_player.position][1])
                 current_player.update_equity(-int(self.board[current_player.position][1]/2))
@@ -680,11 +679,13 @@ class Game:
             return player.sellable(action[4])
 
 
+
     # action = [0, None, None, None, 1, None]
     # obs -> self.players, go_again_next_turn, board_properties, player_turn
     def action_helper(self, action):
         player = self.get_current_player()
         action_type = ACTION_LOOKUP[action[0]]
+        print(action_type)
 
         if not self.validate_move(player, action):
             print(f"Failed to do a Valid Move")
@@ -692,7 +693,7 @@ class Game:
         
         self.current_player = player
 
-        if [action_type] == 'BUY_PROPERTY_LANDED':
+        if action_type == 'BUY_PROPERTY_LANDED':
             pass
             # action = action[2]
             # if (action == 1) and (player.money > self.board[current_player.position][1]):
@@ -722,7 +723,7 @@ class Game:
             player.buy_house(action[3])
         elif action_type == 'SELL_HOUSE':
             player.sell_house(action[4])
-        elif action[0] == 'END':
+        elif action_type == 'END':
             if player.is_bankrupt():
                 print("player went bankrupt.")
                 self.players.remove(player)
@@ -735,7 +736,7 @@ class Game:
             self.turns += 1
             self.print_property_and_money()
             player.rolled_dice_this_turn = False
-        elif action[0] == 'ROLL-DICE':
+        elif action_type == 'ROLL-DICE':
             player.rolled_dice_this_turn = True
             sum_die, self.rolled_double = self.roll_dice()
             if self.rolled_double:
@@ -751,7 +752,7 @@ class Game:
                 self.move_player(player, sum_die)
                 self.check_landed_on_type(player, sum_die)
         else:
-            print('Unrecognized action %d' % action_type)
+            print(f'Unrecognized action {action_type}')
     
     def print_info(self):
         self.print_board()
@@ -759,31 +760,32 @@ class Game:
     
     def reset(self):
         self.WON_MONOPOLY = None
+        self.board = BOARD
         self.chance_cards = []
         self.comm_cards = []
         self.turns = 1
-        p1 = player.Player(1)
-        p2 = player.Player(2)
-        p3 = player.Player(3)
-        p4 = player.Player(4)
+        p1 = Player(1)
+        p2 = Player(2)
+        p3 = Player(3)
+        p4 = Player(4)
         self.players = [p1, p2, p3, p4]
         self.total_houses = 32
         self.total_hotels = 12
         self.current_player = self.players[0]
-        return [self.players, self.current_player, self.board_info, self.total_houses, self.total_hotels, None]
-        
+        return [self.players, self.current_player, self.board, self.total_houses, self.total_hotels, None]
+
     def get_state(self):
-        return [self.players, self.current_player, self.board_info, self.total_houses, self.total_hotels, self.rolled_double]
+        return [self.players, self.current_player, self.board, self.total_houses, self.total_hotels, self.rolled_double]
 
 
-if __name__ == "__main__":
-    print("Started Game")
-    game = Game()
-    game.run()
+# if __name__ == "__main__":
+#     print("Started Game")
+#     game = Game()
+#     game.run()
 
-    print("\nOutcome of Game: ")
-    for player in game.players:
-        print(player.symbol, "Equity: ", player.total_equity, "Value: ", player.money)
+#     print("\nOutcome of Game: ")
+#     for player in game.players:
+#         print(player.symbol, "Equity: ", player.total_equity, "Value: ", player.money)
 
 
 ACTION_LOOKUP = {
@@ -796,6 +798,7 @@ ACTION_LOOKUP = {
     6 : 'TRADE',
     7 : 'BUY_HOUSE',
     8 : 'SELL_HOUSE',
-    8 : 'END',
-    9 : 'ROLL-DICE'
+    9 : 'END',
+    10 : 'ROLL-DICE'
 }
+

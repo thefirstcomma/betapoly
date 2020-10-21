@@ -1,3 +1,4 @@
+
 import gym
 # import numpy as np
 import os, subprocess, time, signal
@@ -14,16 +15,11 @@ class MonopolyEnv(gym.Env):
 
     def __init__(self):
         super(MonopolyEnv, self).__init__()
+        self.status = False
         self.env = Game()
-        self.observation_space = spaces.Box(low=-1, high=1,
-                                            shape=(self.env.getStateSize()))
-        self.action_space = spaces.Tuple((spaces.Discrete(3),
-                                          spaces.Box(low=0, high=100, shape=1),
-                                          spaces.Box(low=-180, high=180, shape=1),
-                                          spaces.Box(low=-180, high=180, shape=1),
-                                          spaces.Box(low=0, high=100, shape=1),
-                                          spaces.Box(low=-180, high=180, shape=1)
-                                        )) 
+        # 3 states for keeping track of next player, 1: regular, 2: Trade, 3: Auction, 4: Trade in an Auction
+        self.observation_space = spaces.Discrete(40 + 14*4)
+        self.action_space = spaces.Discrete(14) 
         # self.prev_action = None
 
     def step(self, action):
@@ -102,7 +98,7 @@ ACTION_LOOKUP = {
     6 : 'TRADE',
     7 : 'BUY_HOUSE',
     8 : 'SELL_HOUSE',
-    8 : 'END',
-    9 : 'ROLL-DICE'
+    9 : 'END',
+    10 : 'ROLL-DICE'
 }
 

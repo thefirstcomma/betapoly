@@ -2,15 +2,13 @@ import time
 import math
 from operator import add
 from itertools import zip_longest
-
-from numpy.lib.nanfunctions import nanmax
-import board_info
+from gym_monopoly.game.board_info import BOARD
 
 class Player:
     def __init__(self, number):
         self.player_number = number
         self.symbol = "(P" + str(number) + ")"
-        self.board = board_info.BOARD
+        self.board = BOARD
         self.position = 0
         self.property_in_use = [] 
         self.property_in_mort = []
