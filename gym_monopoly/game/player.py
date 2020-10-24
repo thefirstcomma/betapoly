@@ -20,6 +20,7 @@ class Player:
         self.houses = [0]*40 # 1-5, 5 == hotel
         self.rolled_dice_this_turn = False
         self.rolled_number_doubles = 0
+        self.must_buy_or_auction = False
 
     def get_symbol(self):
         return self.symbol
