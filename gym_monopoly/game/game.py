@@ -37,6 +37,11 @@ class Game:
         self.total_houses = 32
         self.total_hotels = 12
         self.current_player = self.players[0]
+        self.in_auction = False
+        self.player_before_auction_state = None
+        self.highest_bid = 0
+        self.player_with_highest_bid = None
+        self.other_auction_players = self.players.copy()
 
     def roll_dice(self):
         first_roll = random.randint(1,6)
@@ -72,6 +77,7 @@ class Game:
             return True
         elif curr_property_owner == None:
             print(f"Landed on property nobody owns. Do you buy or auction the property?")
+            print(f"\n{self.board[current_player.position][2]} [{current_player.position}]")
             current_player.must_buy_or_auction = True
             return False
         else:
@@ -530,7 +536,7 @@ class Game:
     def game_ended(self):
         if len(self.players) == 1:
             self.WON_MONOPOLY = self.players[0]
-            return True
+            return self.players
         else:
             return False
 
@@ -626,27 +632,55 @@ class Game:
 
             # self.turns += 1
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     def validate_move(self, player, action):
         action_type = ACTION_LOOKUP[action[0]]
-        if action_type == 'END':
-            return player.rolled_dice_this_turn and not player.must_buy_or_auction
+        if action_type == 'END' and not self.in_auction:
+            if player.rolled_dice_this_turn and not player.must_buy_or_auction:
+                return True
+            else:
+                print("Validation Failed!!!\nPlayer didn't roll the dice or is in a buy/auction state!\n")
+                return False
         elif action_type == 'ROLL-DICE':
-            return (not player.rolled_dice_this_turn and not player.in_jail)
+            if (not player.rolled_dice_this_turn and not player.in_jail and not self.in_auction):
+                return True
+            else:
+                print("Already rolled this turn!")
+                return False
         elif action_type == 'BUY_PROPERTY_LANDED':
-
-            #FIXME: Make sure that the property can be purchased
-            #FIXME: Make sure that the property is correct. 
-            curr_property_owner = None
-            for real_player in self.players:
-                player_full_property_list = real_player.property_in_use + real_player.property_in_mort
-                if player.position in player_full_property_list:
-                    curr_property_owner = real_player
-            return player is not curr_property_owner
-
+            if player.must_buy_or_auction == True and (action[2] == 1 or action[2] == 0) and not self.in_auction:
+                return True
+            else:
+                print("Player cannot buy property or decide to auction in this moment!\n")
+                return False
         elif action_type == 'BUY_HOUSE':
             return player.buyable(action[3])
         elif action_type == 'SELL_HOUSE':
             return player.sellable(action[4])
+        elif action_type == 'CONTINUE_AUCTION':
+            if action[12] <= player.money and self.in_auction:
+                return True
+            else:
+                print("Player doesn't have enough money to auction OR the game is not in an auction phase!")
+                return False
 
     # action = [0, None, None, None, 1, None]
     # obs -> self.players, go_again_next_turn, board_properties, player_turn
@@ -657,29 +691,54 @@ class Game:
 
         if not self.validate_move(player, action):
             print(f"Failed to do a Valid Move")
+            # output punishable get_reward() here!
             return
         
         self.current_player = player
 
-        # TODO
         if action_type == 'BUY_PROPERTY_LANDED':
-            self.current_player.must_buy_or_auction = False
-            pass
-            # action = action[2]
-            # if (action == 1) and (player.money > self.board[current_player.position][1]):
-            #     current_player.update_money(-self.board[current_player.position][1])
-            #     current_player.update_equity(-int(self.board[current_player.position][1]/2))
-
-            #     current_player.property_in_use.append(current_player.position)
-            #     print(f"{current_player.symbol} bought the {self.board[current_player.position][3]} property named: "
-            #             f"{self.board[current_player.position][2]}\n")
-            # elif action == 0:
-            #     # TODO: Auction phase, more parameters
-            #     self.next_player = self.players
+            if action[2] == 1: # update money and equity
+                player.update_money(-self.board[player.position][1])
+                player.update_equity(-int(self.board[player.position][1]/2))
+                player.property_in_use.append(player.position)
+            elif action[2] == 0: # go to an auction
+                print("Property goes to an auction!")
+                self.in_auction = True
+                self.player_before_auction_state = self.current_player
+                copy_of_players = self.players.copy()
+                random.shuffle(copy_of_players)
+                self.current_player = copy_of_players.pop()
+            player.must_buy_or_auction = False
         elif action_type == 'IN_JAIL_ACTION':
             self.act(action[1])
         elif action_type == 'CONTINUE_AUCTION':
-            self.act(action[12])
+            if action[12] > self.highest_bid:
+                print("New highest Bidder!!")
+                self.highest_bid = action[12]
+                self.player_with_highest_bid = self.current_player
+                self.other_auction_players = self.players.copy()
+                self.other_auction_players.remove(self.player_with_highest_bid)
+                random.shuffle(self.other_auction_players)
+                # print("NOTWOWOWOWOWOW", [p.player_number for p in self.other_auction_players])
+            else:
+                print("Not enough money against the highest bid!")
+                self.other_auction_players.remove(player)
+
+            if not self.other_auction_players:
+                prop_index = self.player_before_auction_state.position
+                self.player_with_highest_bid.update_money(-self.highest_bid)
+                self.player_with_highest_bid.update_equity(-self.highest_bid + int(self.board[prop_index][1]/2))
+                self.player_with_highest_bid.property_in_use.append(prop_index)
+                self.highest_bid = 0
+                self.player_with_highest_bid = None
+                self.other_auction_players = self.players.copy()
+                self.current_player = self.player_before_auction_state
+                self.player_before_auction_state = None
+                self.in_auction = False
+            else:
+                next_bidder = self.other_auction_players[0]
+                self.current_player = next_bidder
+
         elif action_type == 'ACCEPT_TRADE':
             self.act(action[13])
         elif action_type == 'MORTGAGE':
@@ -695,9 +754,8 @@ class Game:
             player.sell_house(action[4])
         elif action_type == 'END':
             if player.is_bankrupt():
-                print("player went bankrupt.")
+                print("\nA player went bankrupt.\n")
                 self.players.remove(player)
-
             if player.rolled_number_doubles > 0:
                 self.current_player = player
             else:
@@ -710,6 +768,7 @@ class Game:
             player.rolled_dice_this_turn = True
             sum_die, self.rolled_double = self.roll_dice()
             if self.rolled_double:
+                print("This player rolled doubles!!!!\n")
                 player.rolled_number_doubles += 1
             else:
                 player.rolled_number_doubles = 0
@@ -742,10 +801,10 @@ class Game:
         self.total_houses = 32
         self.total_hotels = 12
         self.current_player = self.players[0]
-        return [self.players, self.current_player, self.board, self.total_houses, self.total_hotels, None]
+        return [self.players, self.current_player, self.board, self.total_houses, self.total_hotels, False, self.in_auction, self.highest_bid, self.player_with_highest_bid, self.other_auction_players]
 
     def get_state(self):
-        return [self.players, self.current_player, self.board, self.total_houses, self.total_hotels, self.rolled_double]
+        return [self.players, self.current_player, self.board, self.total_houses, self.total_hotels, self.rolled_double, self.in_auction, self.highest_bid, self.player_with_highest_bid, self.other_auction_players]
 
 
 # if __name__ == "__main__":

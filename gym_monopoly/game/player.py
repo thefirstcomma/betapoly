@@ -28,26 +28,9 @@ class Player:
     def is_bankrupt(self):
         return self.money < 0
 
-    # Can return only 1 of 4 strings
-    def get_out_jail_actions(self):
-        print(f'Get out of Jail Cards: {self.get_out_jail_card}\n')
-        return input(f"{self.symbol} must 1.PAY_50, 2.ROLL_DOUBLE, or 3.USE_JAIL_CARD >>")
-
-    def player_buys_property(self, binary):
-        print(f"Does {self.symbol} buy the {self.board[self.position][3]} property named: " 
-            f"{self.board[self.position][2]} for ${self.board[self.position][1]} (Y/N) \n")
-        if binary == 1:
-            return "y"
-        elif binary == 0:
-            return "n"
-        else:
-            pass
-        # action = ''
-        # while action != "y" and action != "n":
-        #     action = input(f"Does {self.symbol} buy the {self.board[self.position][3]} property named: " 
-        #     f"{self.board[self.position][2]} for ${self.board[self.position][1]} (Y/N) \n")
-        #     action = action.lower().strip()
-        # return action
+    # def get_out_jail_actions(self):
+    #     print(f'Get out of Jail Cards: {self.get_out_jail_card}\n')
+    #     return input(f"{self.symbol} must 1.PAY_50, 2.ROLL_DOUBLE, or 3.USE_JAIL_CARD >>")
     
     def get_houses_and_hotels(self):
         hotel = 0
@@ -58,14 +41,6 @@ class Player:
             else:
                 housing += i
         return (housing, hotel)
-
-    def player_buys_railroad_utility(self):
-        action = ''
-        while action != "y" and action != "n":
-            action = input(f"Does {self.symbol} buy the railroad/util named: " 
-                        f"{self.board[self.position][2]} for ${self.board[self.position][1]} (Y/N) \n")
-            action = action.lower().strip()
-        return action
     
     def remove_non_housing_property(self, properties):
         if 5 in properties:
