@@ -16,6 +16,7 @@ from gym_monopoly.game.board_info import BOARD, CHANCE, COMMUNITY_CHEST
 
 # FIXME
 # Have at max 2 G.o.o.J Cards
+# Add 2 indices for trading g.o.o.j cards
 # Need to update Income tax to be possible 10% worth vs $200.00 (in type3)
 # Auction for housing, limit housing=32, hotels=12, -- everytime someone buys/sells houses, iterate player actions.
 # Auction bug, when everybody types 'n'
@@ -39,6 +40,7 @@ class Game:
         self.total_hotels = 12
         self.current_player = self.players[0]
         self.in_auction = False
+        self.in_trade = False
         self.player_before_auction_state = None
         self.highest_bid = 0
         self.player_with_highest_bid = None
@@ -435,119 +437,189 @@ class Game:
     #     8 : TRADE MONEY YOU GIVE
     #     9 : TRADE MONEY YOU TAKE
     #     10 : AUCTION AMOUNT
-    #     11 : ACCEPT_TRADE
+    #     11 : ACCEPT_TRADE [0, 1]
     #     12-37: YOUR PROPERTY OFFERS
     #     38-63: ENEMY PROPERTY WANTS
+    #     64: TRADER INITIATOR UNMORTGAGE PROPERTY RIGHT AWAY [0,1]
+    #     65: TRADER DECISION UNMORTGAGE PROPERTY RIGHT AWAY [0,1]
     # }
                         
 
     def validate_action_list(self, action):
-        # FIXME This shit is broken, david ur code keeps crashing holy shit holy shit fuck 
-        # for act in action:
-        #     if not isinstance(act, int):
-        #         print("Is_instance error!")
-        #         return False
+        # print(action)
+        for a in action:
+            if a is not None and not isinstance(a, int):
+                print("TYPEERROR IN line 448")
+                return False
         
-        if action[0] < 0 or action[0] > 11:
+        if (action[0] is not None) and (action[0] < 0 or action[0] > 11):
             print(f"Error: action[0] = {action[0]}")
             return False
-        if action[1] < 0 or action[1] > 2:
+        if (action[1] is not None) and (action[1] < 0 or action[1] > 2):
             print(f"Error: action[1] = {action[1]}")
             return False
-        if action[2] < 0 or action[2] > 1:
+        if (action[2] is not None) and (action[2] < 0 or action[2] > 1):
             print(f"Error: action[2] = {action[2]}")
             return False
-        if action[3] not in [1, 3, 6, 8, 9, 11, 13, 14, 16, 18, 19, 21, 23, 24, 26, 27, 29, 31, 32, 34, 37, 39]:
+        if (action[3] is not None) and action[3] not in [1, 3, 6, 8, 9, 11, 13, 14, 16, 18, 19, 21, 23, 24, 26, 27, 29, 31, 32, 34, 37, 39]:
             print(f"Error: action[3] = {action[3]}")
             return False
-        if action[4] not in [1, 3, 6, 8, 9, 11, 13, 14, 16, 18, 19, 21, 23, 24, 26, 27, 29, 31, 32, 34, 37, 39]:
+        if action[4] is not None and action[4] not in [1, 3, 6, 8, 9, 11, 13, 14, 16, 18, 19, 21, 23, 24, 26, 27, 29, 31, 32, 34, 37, 39]:
             print(f"Error: action[4] = {action[4]}")
             return False
-        if action[5] not in [1, 3, 5, 6, 8, 9, 11, 12, 13, 14, 15, 16, 18, 19, 21, 23, 24, 25, 26, 27, 28, 29, 31, 32, 34, 35, 37, 39]:
+        if action[5] is not None and action[5] not in [1, 3, 5, 6, 8, 9, 11, 12, 13, 14, 15, 16, 18, 19, 21, 23, 24, 25, 26, 27, 28, 29, 31, 32, 34, 35, 37, 39]:
             print(f"Error: action[5] = {action[5]}")
             return False
-        if action[6] not in [1, 3, 5, 6, 8, 9, 11, 12, 13, 14, 15, 16, 18, 19, 21, 23, 24, 25, 26, 27, 28, 29, 31, 32, 34, 35, 37, 39]:
+        if action[6] is not None and action[6] not in [1, 3, 5, 6, 8, 9, 11, 12, 13, 14, 15, 16, 18, 19, 21, 23, 24, 25, 26, 27, 28, 29, 31, 32, 34, 35, 37, 39]:
             print(f"Error: action[6] = {action[6]}")
             return False
-        if action[7] not in [1, 2, 3, 4]:
+        if action[7] is not None and action[7] not in [1, 2, 3, 4]:
             print(f"Error: action[7] = {action[7]}")
             return False
-        if action[8] < 0:
+        if action[8] is not None and action[8] < 0:
             print(f"Error: action[8] = {action[8]}")
             return False
-        if action[9] < 0:
+        if action[9] is not None and action[9] < 0:
             print(f"Error: action[9] = {action[9]}")
             return False
-        if action[10] < 0:
+        if action[10] is not None and action[10] < 0:
             print(f"Error: action[10] = {action[10]}")
             return False
-        if action[11] not in [0, 1]:
-            print(f"Error: action[11] = {action[11]}")
-            return False
-        for index_guy in range(12, 64):
-            if action[index_guy] not in [0, 1]:
+        for index_guy in range(11, 66):
+            if action[index_guy] is not None and (action[index_guy] not in [0, 1]):
                 print(f"Error: action[{index_guy}] = {action[index_guy]}")
                 return False
         return True
 
     def validate_move(self, player, action):
-        # FIXME bugged, can't roll the dice here
         if not self.validate_action_list(action):
+            print("Failed validate action list!")
             return False
         action_type = ACTION_LOOKUP[action[0]]
         
-        if action_type == 'END' and not self.in_auction:
-            if player.rolled_dice_this_turn and not player.must_buy_or_auction:
-                return True
-            else:
-                print("Validation Failed!!!\nPlayer didn't roll the dice or is in a buy/auction state!\n")
+        if action_type == 'END':
+            if not player.rolled_dice_this_turn:
+                print("Player has not rolled dice this turn")
                 return False
+            elif player.must_buy_or_auction:
+                print("Player must buy or auction this turn")
+                return False
+            elif self.in_auction:
+                print("Player can't end their turn while they are in an auction")
+                return False
+            elif self.in_trade:
+                print("Players in Trade can't end their turns")
+                return False
+            else:
+                return True
         elif action_type == 'ROLL-DICE':
-            if (not player.rolled_dice_this_turn and not player.in_jail and not self.in_auction):
-                return True
-            else:
-                print("Already rolled this turn or In Jail or in an Auction!")
+            if player.rolled_dice_this_turn:
+                print("Players who rolled dice allready this turn can't roll again")
                 return False
+            elif player.in_jail:
+                print("Players in Jail can't roll dice")
+                return False
+            elif self.in_trade:
+                print("Players in Trade can't roll dice")
+                return False
+            elif self.in_auction:
+                print("Players in Auction can't roll dice")
+                return False
+            else:
+                return True
         elif action_type == 'BUY_PROPERTY_LANDED':
-            if player.must_buy_or_auction == True and (action[2] == 1 or action[2] == 0) and not self.in_auction:
-                return True
-            else:
-                print("Player cannot buy property or decide to auction in this moment!\n")
+            if player.must_buy_or_auction == False:
+                print("Player can't buy property if they haven't landed on it")
                 return False
+            elif self.in_auction:
+                print("Player can't buy a property in the middle of an auction")
+                return False
+            elif self.in_trade:
+                print("Players in Trade can't currently buy proeprty")
+                return False
+            else:
+                return True
         elif action_type == 'IN_JAIL_ACTION':
             if action[1] == 2 and player.get_out_jail_card <= 0:
                 print("Not enough get out of Jail Card")
                 return False
-            if player.in_jail and not player.rolled_dice_this_turn:
-                return True
-            else:
-                print("Player not in Jail or player already rolled the dice!")
+            if not player.in_jail:
+                print("Player is not in Jail. Can't do Jail Action")
                 return False
+            elif player.rolled_dice_this_turn:
+                print("Player has already rolled dice this turn")
+                return False
+            else:
+                return True
         elif action_type == 'BUY_HOUSE':
             return player.buyable(action[3])
         elif action_type == 'SELL_HOUSE':
             return player.sellable(action[4])
         elif action_type == 'CONTINUE_AUCTION':
-            if action[10] <= player.money and self.in_auction:
-                return True
-            else:
-                print("Player doesn't have enough money to auction OR the game is not in an auction phase!")
+            if action[10] > player.money:
+                print(f"Can't auction because {player.symbol} only has ${player.money}")
                 return False
+            elif not self.in_auction:
+                print(f"{player.symbol} is NOT in an auction")
+                return False
+            elif self.in_trade:
+                print("Players in Trade can't auction right now!")
+                return False
+            else:
+                return True
         elif action_type == 'MORTGAGE':
             curr_prop = action[5]
-            return curr_prop in player.property_in_use
+            if curr_prop in player.property_in_use:
+                return True
+            else:
+                print(f"{player.symbol} doesn't own this property")
+                return False
         elif action_type == "UNMORTGAGE":
             curr_prop = action[6]
-            return curr_prop in player.property_in_mort
+            if curr_prop in player.property_in_mort:
+                return True
+            else:
+                print(f"{player.symbol} property isn't currently mortgage")
+                return False
+                
         elif action_type == "TRADE":
-            trade_partner = action[7]
-            if [p.player_number == trade_partner for p in self.players[0]] == player:
-                 print("You cannot trade with yourself!")
-                 return False
+    #     7 : TRADE WITH PLAYER NUMBER
+    #     8 : TRADE MONEY YOU GIVE
+    #     9 : TRADE MONEY YOU TAKE
+    #     12-37: YOUR PROPERTY OFFERS
+    #     38-63: ENEMY PROPERTY WANTS
+    #     64: TRADER INITIATOR UNMORTGAGE PROPERTY RIGHT AWAY [0,1]
+    #     65: Respondent DECISION UNMORTGAGE PROPERTY RIGHT AWAY [0,1]
+    # }
+            trade_number = action[7]
+            trade_player = None
+            for pla in self.players:
+                if pla.player_number == trade_number:
+                    trade_player = pla
+            player_prop = player.property_in_mort + player.property_in_use
+            trader_prop = trade_player.property_in_mort + trade_player.property_in_use
+
+            if trade_number == player.player_number:
+                print("You cannot trade with yourself!")
+                return False
+            if player.money < action[8]:
+                print("You cannot offer more money then you own")
+                return False
+            if trade_player.money < action[9]:
+                print("You cannot request more money than the opposing player owns!")
+                return False
             
-            
+            for i in range(12, 38):
+                if action[i] == 1 and action[i] not in player_prop:
+                    print("You cannot trade a property you do not own.")
+                    return False
+            for i in range(38, 64):
+                if action[i] == 1 and action[i] not in player_prop:
+                    print("You cannot request property that opposing players does not own.")
+                    return False
+            return True
         elif action_type == 'ACCEPT_TRADE':
-            pass
+            return True
         else:
             print("Received Action that wasn't recognized!!!!")
             return False
@@ -560,6 +632,7 @@ class Game:
         print(action_type)
 
         if not self.validate_move(player, action):
+            print(action)
             print(f"Failed to do a Valid Move")
             # output punishable get_reward() here!
             return
@@ -640,9 +713,57 @@ class Game:
                 self.current_player = next_bidder
 
         elif action_type == 'ACCEPT_TRADE':
-            # get back to the original player after accepting/declining the trade
+            if action[11] == 0: # no
+                print("Player declined the trade")
+            elif action[11] == 1: # yes
+                # self.trade_list = [player, trade_player, curr_money, trader_money, my_offerings, property_desired]
+                trade_player = self.trade_list[1]
+                player = self.trade_list[0]
+                print("\n\nTrade List: ", self.trade_list)
+                print("Player accepted the trade")
+                player.update_money(-self.trade_list[2])
+                player.update_equity(-self.trade_list[2])
+                trade_player.update_money(self.trade_list[2])
+                trade_player.update_equity(self.trade_list[2])
+
+                player.update_money(self.trade_list[3])
+                player.update_equity(self.trade_list[3])
+                trade_player.update_money(-self.trade_list[3])
+                trade_player.update_equity(-self.trade_list[3])
+                print(f"{player.symbol} ${player.money}, "
+                        f"{trade_player.symbol} ${trade_player.money}")
+
+                # FIXME Something is broken here!
+                for i in self.trade_list[5]:
+                    if i in trade_player.property_in_use:
+                        trade_player.property_in_use.remove(i)
+                        player.property_in_use.append(i)
+                    elif i in trade_player.property_in_mort:
+                        trade_player.property_in_mort.remove(i)
+                        player.property_in_mort.append(i)
+                        if self.trade_list[6] == 1:
+                            player.unmortgage_property(i)
+                        elif self.trade_list[6] == 0:
+                            ten_percent_interest = math.ceil((self.board[i][1] // 2) * .1)
+                            player.update_money(-ten_percent_interest)
+                            player.update_equity(-ten_percent_interest)
+                
+                # FIXME, error in trades
+                for i in self.trade_list[4]:
+                    if i in player.property_in_use:
+                        player.property_in_use.remove(i)
+                        trade_player.property_in_use.append(i)
+                    elif i in player.property_in_mort:
+                        player.property_in_mort.remove(i)
+                        trade_player.property_in_mort.append(i)
+                        if action[65] == 1:
+                            trade_player.unmortgage_property(i)
+                        elif action[65] == 0:
+                            ten_percent_interest = math.ceil((self.board[i][1] // 2) * .1)
+                            trade_player.update_money(-ten_percent_interest)
+                            trade_player.update_equity(-ten_percent_interest)
+            self.in_trade = False
             self.current_player = self.trade_list[0]
-            self.act(action[11])
         elif action_type == 'MORTGAGE':
             player.mortgage_property(action[5])
         elif action_type == 'UNMORTGAGE':
@@ -655,9 +776,25 @@ class Game:
         #     38-63: ENEMY PROPERTY WANTS
             my_offerings = action[12:38]
             property_desired = action[38:]
-            self.trade_list = [player, action[7], action[8], action[9], my_offerings, property_desired]
+            try:
+                curr_money = int(action[8])
+            except ValueError:
+                curr_money = 0
+            try:
+                trader_money = int(action[9])
+            except ValueError:
+                trader_money = 0
+            
+            
             print("Trade Request Sent")
-            self.current_player = action[7]
+            trade_number = action[7]
+            trade_player = None
+            for pla in self.players:
+                if pla.player_number == trade_number:
+                    trade_player = pla
+            self.trade_list = [player, trade_player, curr_money, trader_money, my_offerings, property_desired, action[64]]
+            self.current_player = trade_player
+            self.in_trade = True
         elif action_type == 'BUY_HOUSE':
             player.buy_house(action[3])
         elif action_type == 'SELL_HOUSE':

@@ -30,7 +30,7 @@ class Agent_human:
                         print(f'Rail: {self.board[i][2]} [{i}]')
 
     def get_action(self, obs):
-        NUMBER_OF_ACTIONS = 14
+        NUMBER_OF_ACTIONS = 66
         print("-------------------------------")
         print(f"-------------- P{self.player_number} -------------")
         print("-------------------------------")
@@ -50,12 +50,14 @@ class Agent_human:
     #     5 : MORTGAGE ON THIS INDEX
     #     6 : UN-MORTGAGE ON THIS INDEX
     #     7 : TRADE WITH PLAYER NUMBER
-    #     8 : MONEY YOU GIVE
-    #     9 : MONEY YOU TAKE
-    #     10 : PROPERTY YOU GIVE
-    #     11 : PROPERTY YOU GET
-    #     12 : AUCTION AMOUNT # if == None or 0, quit auction
-    #     13 : ACCEPT_TRADE
+    #     8 : TRADE MONEY YOU GIVE
+    #     9 : TRADE MONEY YOU TAKE
+    #     10 : AUCTION AMOUNT
+    #     11 : ACCEPT_TRADE
+    #     12-37: YOUR PROPERTY OFFERS
+    #     38-63: ENEMY PROPERTY WANTS
+    #     64: TRADER INITIATOR UNMORTGAGE PROPERTY RIGHT AWAY [0,1]
+    #     65: TRADER DECISION UNMORTGAGE PROPERTY RIGHT AWAY [0,1]
     # }
 
     # obs = [self.players, self.current_player, self.board, self.total_houses, self.total_hotels, self.rolled_double]
@@ -81,34 +83,78 @@ class Agent_human:
             elif output.upper() == 'PAY_50' or output.upper() == 'P':
                 action[1] = 1
             elif output.upper() == 'USE_CARD' or output.upper() == 'U':
-                acton[1] = 2
+                action[1] = 2
         elif action_input == 'CONTINUE_AUCTION' or action_input == 'CA':
             action[0] = 2
             output = input(f"The highest bid is ${obs[7]}. Input an integer for how much you want to bid: ")
             action[10] = int(output)
         elif action_input == 'ACCEPT_TRADE' or action_input == 'AT':
             action[0] = 3
-            pass
+            output = input("Do you accept the trade YES or NO (Y/N)")
+            output = output.upper()
+            if output == 'YES' or output == 'Y':
+                action[11] = 1
+            elif output == 'NO' or output == 'N':
+                action[11] = 0
+            else:
+                print(f"{output} is an Invalid Input")
+            output = input("Do you unmortgage properties you recieve right away YES or NO (Y/N)?")
+            output = output.upper()
+            if output == 'YES' or output == 'Y':
+                action[65] = 1
+            elif output == 'NO' or output == 'N':
+                action[65] = 0
+            else:
+                print(f"{output} is an Invalid Input")
         elif action_input == 'MORTGAGE' or action_input == 'M':
             action[0] = 4
             output = input("Put in the integer of the property you want to Mortgage: ")
-            action[5] = output
+            action[5] = int(output)
         elif action_input == 'UNMORTGAGE' or action_input == 'U':
             action[0] = 5
             output = input("Put in the integer of the property you want to Unmortgage: ")
-            action[6] = output
+            action[6] = int(output)
         elif action_input == 'TRADE' or action_input == 'T':
             action[0] = 6
-            output = input("What player do you want to trade with (1, 2, 3 , 4): ")
+            output = input("What player do you want to trade with (1, 2, 3, 4): ")
             action[7] = int(output)
-            output = input("How much money are you going to pay the trade_partner for this trade: ")
+            output = input("How much money are you offering: ")
             action[8] = int(output)
+            output = input("How much money are you recieving: ")
+            action[9] = int(output)
+            output = input("What properties are you offering: ")
+            tmp = output.split(' ')
+            if not tmp == ['']:
+                tmp = list(map(int, tmp))
+            prop = [1, 3, 5, 6, 8, 9, 11, 12, 13, 14, 15, 16, 18, 19, 21, 23, 24, 25, 26, 27, 28, 29, 31, 32, 34, 35, 37, 39]
+            for i in range(0, 26):
+                action[i+12] = 0
+                if prop[i] in tmp:
+                    action[i+12] += 1
+            output = input("What properties do you want to recieve: ")
+            tmp = output.split(' ')
+            if not tmp == ['']:
+                tmp = list(map(int, tmp))
+            for i in range(0, 26):
+                action[i+38] = 0
+                if prop[i] in tmp:
+                    action[i+38] += 1
+            output = input("Do you unmortgage properties you recieve right away YES or NO (Y/N)?")
+            output = output.upper()
+            if output == 'YES' or output == 'Y':
+                action[64] = 1
+            elif output == 'NO' or output == 'N':
+                action[64] = 0
+            else:
+                print(f"{output} is an INVALID input")
         elif action_input == 'BUY_HOUSE'or action_input == 'B':
             action[0] = 7
             house_number = input("What House do you want to buy? (House Number)")
+            action[3] = int(house_number)
         elif action_input == 'SELL_HOUSE' or action_input == 'S':
             action[0] = 8
             house_number = input("What House do you want to sell? (House Number)")
+            action[4] = int(house_number)
         elif action_input == 'END' or action_input == 'E':
         	action[0]= 9
         elif action_input == 'ROLL-DICE' or action_input == 'R':
