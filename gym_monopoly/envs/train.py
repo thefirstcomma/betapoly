@@ -17,5 +17,5 @@ for _ in range(10000):
     if done:
         env.reset()
         break
-    env.render()
+    # env.render()
 env.close()

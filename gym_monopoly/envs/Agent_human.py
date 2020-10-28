@@ -31,11 +31,12 @@ class Agent_human:
 
     def get_action(self, obs):
         NUMBER_OF_ACTIONS = 14
-        print("Current Player turn Player", self.player_number)
-        print("Choose actions: \n")
-        print("BUY_PROPERTY_LANDED (BP), \n IN_JAIL_ACTION (JA), \n CONTINUE_AUCTION (CA), \n ")
-        print("ACCEPT_TRADE (AT), \n MORTGAGE (M), \n UNMORTGAGE (U), \n TRADE (T), \n BUY_HOUSE (B), \n")
-        print("SELL_HOUSE (S), \n END (E), \n ROLL-DICE (R), \n")
+        print("-------------------------------")
+        print(f"-------------- P{self.player_number} -------------")
+        print("-------------------------------")
+        print("BUY_PROP (BP), IN_JAIL_ACT (JA), Bid Auction(CA), TRADE (T),")
+        print("ACCEPT_TRADE (AT), MORTGAGE (M), UNMORTGAGE (U), BUY_HOUSE (B),")
+        print("SELL_HOUSE (S), END (E), ROLL-DICE (R)")
         action_input = input("Enter Action: ")
         action_input = action_input.upper()
         action = [None]* NUMBER_OF_ACTIONS
@@ -73,28 +74,35 @@ class Agent_human:
                 print("Buy or Auction command is invalid")
         elif action_input == 'IN_JAIL_ACTION' or action_input == 'JA':
             action[0] = 1
-            if output.upper() == 'ROLL_DOUBLE':
-                action[1] = 1
-            elif output.upper() == 'PAY_50':
+            output = input('Agent_human.py: What do you do ROLL_DOUBLE, PAY_50, or USE_CARD (R, P, U)? ')
+            output = output.upper()
+            if output.upper() == 'ROLL_DOUBLE' or output.upper() == 'R':
                 action[1] = 0
-            elif output.upper() == 'USE_CARD':
+            elif output.upper() == 'PAY_50' or output.upper() == 'P':
+                action[1] = 1
+            elif output.upper() == 'USE_CARD' or output.upper() == 'U':
                 acton[1] = 2
         elif action_input == 'CONTINUE_AUCTION' or action_input == 'CA':
             action[0] = 2
             output = input(f"The highest bid is ${obs[7]}. Input an integer for how much you want to bid: ")
-            action[12] = int(output)
+            action[10] = int(output)
         elif action_input == 'ACCEPT_TRADE' or action_input == 'AT':
             action[0] = 3
             pass
         elif action_input == 'MORTGAGE' or action_input == 'M':
             action[0] = 4
-            pass
+            output = input("Put in the integer of the property you want to Mortgage: ")
+            action[5] = output
         elif action_input == 'UNMORTGAGE' or action_input == 'U':
             action[0] = 5
-            pass
+            output = input("Put in the integer of the property you want to Unmortgage: ")
+            action[6] = output
         elif action_input == 'TRADE' or action_input == 'T':
             action[0] = 6
-            pass
+            output = input("What player do you want to trade with (1, 2, 3 , 4): ")
+            action[7] = int(output)
+            output = input("How much money are you going to pay the trade_partner for this trade: ")
+            action[8] = int(output)
         elif action_input == 'BUY_HOUSE'or action_input == 'B':
             action[0] = 7
             house_number = input("What House do you want to buy? (House Number)")
@@ -106,7 +114,7 @@ class Agent_human:
         elif action_input == 'ROLL-DICE' or action_input == 'R':
             action[0] = 10
         else:
-            print("YOU SUCK!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            print("Incorrect prompt at Agent_human!!!!")
         
         return action
 
