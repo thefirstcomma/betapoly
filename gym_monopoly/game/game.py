@@ -26,7 +26,6 @@ from gym_monopoly.game.board_info import BOARD, CHANCE, COMMUNITY_CHEST
 
 class Game:
     def __init__(self):
-        self.WON_MONOPOLY = None
         self.board = BOARD
         self.chance_cards = []
         self.comm_cards = []
@@ -47,6 +46,7 @@ class Game:
         self.other_auction_players = self.players.copy()
         self.rolled_double = False
         self.trade_list = []
+        self.auctioned_property = [None]
 
     def roll_dice(self):
         first_roll = random.randint(1,6)
@@ -62,12 +62,10 @@ class Game:
             player.position = player.position % 40
             print(player.symbol, "passed GO, collect $200")
             player.update_money(200)
-            player.update_equity(200)
 
     def move_cuz_card(self, player, future_location):
         if player.position > future_location:
             player.update_money(200)
-            player.update_equity(200)
         player.position = future_location
 
     def pay_rent_if_owned(self, current_player, sum_die):
@@ -103,26 +101,23 @@ class Game:
                 if numb_houses > 0:
                     amount = self.board[current_player.position][4+numb_houses]
                     current_player.update_money(-amount)
-                    current_player.update_equity(-amount)
                     curr_property_owner.update_money(amount)
-                    curr_property_owner.update_equity(amount)
                     print(f"Paid extra because this property has {numb_houses} houses")
                     print(f"{current_player.symbol} paid ${amount} rent to {curr_property_owner.symbol}")
                 else:
                     amount = self.board[current_player.position][4]*2
                     current_player.update_money(-amount)
-                    current_player.update_equity(-amount)
                     curr_property_owner.update_money(amount)
-                    current_player.update_equity(amount)
                     print(f"Paid extra because this property is a monopoly w/o houses")
                     print(f"{current_player.symbol} paid ${amount} rent to {curr_property_owner.symbol}")
             else:
                 amount = self.board[current_player.position][4]
                 current_player.update_money(-amount)
-                current_player.update_equity(-amount)
                 curr_property_owner.update_money(amount)
-                curr_property_owner.update_equity(amount)
                 print(f"{current_player.symbol} paid ${amount} rent to {curr_property_owner.symbol}")
+                
+            self.check_bankrupt(current_player, curr_property_owner)
+            
         else:
             print(f"{current_player.symbol} Landed on Mortgaged property, No payments YAY!!!")
     
@@ -144,9 +139,8 @@ class Game:
             elif total_amount == 3:
                 total_amount = 4
             current_player.update_money(-25*total_amount)
-            current_player.update_equity(-25*total_amount)
+            self.check_bankrupt(current_player, curr_property_owner)
             curr_property_owner.update_money(25*total_amount)
-            curr_property_owner.update_equity(25*total_amount)
             print(f"{current_player.symbol} paid rent of ${25*total_amount} to {curr_property_owner.symbol}")
         else:
             print("Laned on mortgaged Railroad, No rent here!")
@@ -170,9 +164,8 @@ class Game:
             print("1 or 2", total_amount)
             print("Amount owed for rent:", amount)
             current_player.update_money(-amount)
-            current_player.update_equity(-amount)
+            self.check_bankrupt(current_player, curr_property_owner)
             curr_property_owner.update_money(amount)
-            curr_property_owner.update_equity(amount)
             print(f"{current_player.symbol} paid ${amount} rent to {curr_property_owner.symbol}")
         else:
             print("Laned on mortgaged Utility, No rent here!")
@@ -180,9 +173,9 @@ class Game:
     def land_on_type3(self, current_player):
         tax_amount = self.board[current_player.position][1]
         current_player.update_money(-tax_amount)
-        current_player.update_equity(-tax_amount)
+        self.check_bankrupt(current_player, "Bank")
         print(f"{current_player.symbol} landed on TAXES. Has to pay ${tax_amount}")
-        print(f"{current_player.symbol} Current Money Now: ${current_player.money}\n")
+        print(f"{current_player.symbol} Current Money Now: ${current_player.get_money()}\n")
 
     def land_on_type5(self, current_player):
         # Go to Jail
@@ -200,7 +193,7 @@ class Game:
 
         if card[0] == 0:
             current_player.update_money(card[3])
-            current_player.update_equity(card[3])
+            self.check_bankrupt(current_player, "Bank")
             if card[2] != -1:
                 print(f"Moved to a new spot: {card[2]}")
                 self.move_cuz_card(current_player, card[2])
@@ -216,18 +209,16 @@ class Game:
             for player in self.players:
                 if current_player != player:
                     current_player.update_money(card[3])
-                    current_player.update_equity(card[3])
                     player.update_money(-card[3])
-                    player.update_equity(-card[3])
+                    self.check_bankrupt(player, "Bank")
                     print(f"{current_player.symbol} collected ${card[3]} from {player.symbol}")
         elif card[0] == 4:
             houses, hotels = current_player.get_houses_and_hotels()
             print(f"Pay for each house: {houses} and hotel: {hotels}")
             current_player.update_money(houses * card[2])
-            current_player.update_equity(houses * card[2])
             current_player.update_money(hotels * card[3])
-            current_player.update_equity(hotels * card[3])
-            print(f"{current_player.symbol} money updated {current_player.money}")
+            self.check_bankrupt(current_player, "Bank")
+            print(f"{current_player.symbol} money updated {current_player.get_money()}")
     
     def land_on_type7(self, current_player, die_roll):
         if len(self.chance_cards) == 0:
@@ -239,7 +230,7 @@ class Game:
 
         if card[0] == 0:
             current_player.update_money(card[3])
-            current_player.update_equity(card[3])
+            self.check_bankrupt(current_player, "Bank")
             if card[2] != -1:
                 print(f"Moved to new spot: {card[2]}")
                 self.move_cuz_card(current_player, card[2])
@@ -255,25 +246,23 @@ class Game:
             for player in self.players:
                 if current_player != player:
                     current_player.update_money(card[3])
-                    current_player.update_equity(card[3])
+                    self.check_bankrupt(current_player, "Bank")
                     player.update_money(-card[3])
-                    player.update_equity(-card[3])
+                    self.check_bankrupt(player, "Bank")
                     print(f"{current_player.symbol} paid {player.symbol} ${card[3]}")
         elif card[0] == 4:
             houses, hotels = current_player.get_houses_and_hotels()
             print(f"Pay for each house: {houses} and hotel: {hotels}")
             current_player.update_money(houses * card[2])
-            current_player.update_equity(houses * card[2])
             current_player.update_money(hotels * card[3])
-            current_player.update_equity(hotels * card[3])
-            print(f"{current_player.symbol} money updated {current_player.money}")
+            self.check_bankrupt(current_player, "Bank")
+            print(f"{current_player.symbol} money updated {current_player.get_money()}")
         elif card[0] == 5:
             if card[2] == "util":
                 if current_player.position > 28:
                     current_player.position = 12
                     print("Passed GO, collect 200")
                     current_player.update_money(200)
-                    current_player.update_equity(200)
                 elif current_player.position > 12:
                     current_player.position = 28
                 elif current_player.position < 12:
@@ -283,7 +272,6 @@ class Game:
                 if current_player.position > 35:
                     current_player.position = 5
                     current_player.update_money(200)
-                    current_player.update_equity(200)
                 elif current_player.position > 25:
                     current_player.position = 35
                 elif current_player.position > 15:
@@ -355,7 +343,7 @@ class Game:
     
     def print_property_and_money(self):
         for player in self.players:
-            print(f'{player.symbol} money: ${player.get_money()} - equity: ${player.total_equity}')
+            print(f'{player.symbol} money: ${player.get_money()}')
 
         for player in self.players:
             print(f"\n{player.symbol} Properties: ")
@@ -400,11 +388,34 @@ class Game:
     
     def game_ended(self):
         if len(self.players) == 1:
-            self.WON_MONOPOLY = self.players[0]
-            return self.players
+            print("Game Over!")
+            return True
         else:
             return False
+    
+    def check_bankrupt(self, player, new_entity_owner):
+        if player.is_bankrupt():
+            print("\nA player went bankrupt.\n")
+            self.players.remove(player)
 
+            if new_entity_owner == "Bank":
+                print("Player's property goes to the Bank")
+                self.auctioned_property = [[player.property_in_mort], [player.property_in_use]]
+                self.in_auction = True
+                copy_of_players = self.players.copy()
+                random.shuffle(copy_of_players)
+                self.current_player = copy_of_players.pop()
+            else:
+                print(f"Player's property goes to {new_entity_owner.symbol}")
+                new_entity_owner.property_in_mort += player.property_in_mort
+                new_entity_owner.property_in_use += player.property_in_use
+                for i in range(40):
+                    if player.houses[i] != 0:
+                        player.money += player.houses[i] * self.board[i][10]
+                if player.money > 0:
+                    new_entity_owner.update_money(player.money)
+                
+            
 
 
 
@@ -528,6 +539,7 @@ class Game:
             else:
                 return True
         elif action_type == 'BUY_PROPERTY_LANDED':
+            curr_prop = player.position
             if player.must_buy_or_auction == False:
                 print("Player can't buy property if they haven't landed on it")
                 return False
@@ -536,6 +548,13 @@ class Game:
                 return False
             elif self.in_trade:
                 print("Players in Trade can't currently buy proeprty")
+                return False
+            elif self.board[curr_prop][0] not in [0, 1, 2]:
+                print(f"{self.board[curr_prop][2]} is not purchasably by {player.symbol}")
+                return False
+            elif self.board[curr_prop][1] > player.get_money():
+                print(f"{player.symbol} doesn't have enough money to buy {self.board[curr_prop][2]}.")
+                print(f"{player.symbol} has ${player.get_money()} while the property costs {self.board[curr_prop][1]}")
                 return False
             else:
                 return True
@@ -549,6 +568,9 @@ class Game:
             elif player.rolled_dice_this_turn:
                 print("Player has already rolled dice this turn")
                 return False
+            elif action[1] == 0 and player.get_money() < 50:
+                print("Player can't pay $50 required to get out of jail. ")
+                return False
             else:
                 return True
         elif action_type == 'BUY_HOUSE':
@@ -556,8 +578,8 @@ class Game:
         elif action_type == 'SELL_HOUSE':
             return player.sellable(action[4])
         elif action_type == 'CONTINUE_AUCTION':
-            if action[10] > player.money:
-                print(f"Can't auction because {player.symbol} only has ${player.money}")
+            if action[10] > player.get_money():
+                print(f"Can't auction because {player.symbol} only has ${player.get_money()}")
                 return False
             elif not self.in_auction:
                 print(f"{player.symbol} is NOT in an auction")
@@ -569,18 +591,23 @@ class Game:
                 return True
         elif action_type == 'MORTGAGE':
             curr_prop = action[5]
-            if curr_prop in player.property_in_use:
-                return True
-            else:
+            if curr_prop not in player.property_in_use:
                 print(f"{player.symbol} doesn't own this property")
                 return False
+            else:
+                return True
         elif action_type == "UNMORTGAGE":
             curr_prop = action[6]
-            if curr_prop in player.property_in_mort:
-                return True
-            else:
+            ten_percent_interest = math.ceil((self.board[curr_prop][1] // 2) * .1)
+            cost_plus_ten_percent_interest = (self.board[curr_prop][1] // 2) + ten_percent_interest
+            if curr_prop not in player.property_in_mort:
                 print(f"{player.symbol} property isn't currently mortgage")
                 return False
+            elif player.money < cost_plus_ten_percent_interest:
+                print(f"{player.symbol} doesn't have enought money to unmortgage. ")
+                return False
+            else:
+                return True
                 
         elif action_type == "TRADE":
     #     7 : TRADE WITH PLAYER NUMBER
@@ -602,10 +629,10 @@ class Game:
             if trade_number == player.player_number:
                 print("You cannot trade with yourself!")
                 return False
-            if player.money < action[8]:
+            if player.get_money() < action[8]:
                 print("You cannot offer more money then you own")
                 return False
-            if trade_player.money < action[9]:
+            if trade_player.get_money() < action[9]:
                 print("You cannot request more money than the opposing player owns!")
                 return False
             
@@ -618,6 +645,7 @@ class Game:
                     print("You cannot request property that opposing players does not own.")
                     return False
             return True
+
         elif action_type == 'ACCEPT_TRADE':
             return True
         else:
@@ -640,9 +668,8 @@ class Game:
         self.current_player = player
 
         if action_type == 'BUY_PROPERTY_LANDED':
-            if action[2] == 1: # update money and equity
+            if action[2] == 1: # update money
                 player.update_money(-self.board[player.position][1])
-                player.update_equity(-int(self.board[player.position][1]/2))
                 player.property_in_use.append(player.position)
             elif action[2] == 0: # go to an auction
                 print("Property goes to an auction!")
@@ -668,7 +695,7 @@ class Game:
                 if player.turns_in_jail >= 3:
                     print("3 turns lasted in Jail without rolling a double!")
                     player.update_money(-50)
-                    player.update_equity(-50)
+                    self.check_bankrupt(player, "Bank")
                     self.move_player(player, sum_die)
                     self.check_landed_on_type(player, sum_die)
             elif action[1] == 1: # pay-50
@@ -676,7 +703,6 @@ class Game:
                 player.turns_in_jail = 0
                 print("Player paid $50 to Get out of Jail early!")
                 player.update_money(-50)
-                player.update_equity(-50)
             elif action[1] == 2: # use g.o.o.j. card
                 player.in_jail = False
                 player.turns_in_jail = 0
@@ -688,6 +714,7 @@ class Game:
         elif action_type == 'CONTINUE_AUCTION':
             if action[10] > self.highest_bid:
                 print("New highest Bidder!!")
+                self.auctioned_property = [self.player_before_auction_state.position]
                 self.highest_bid = action[10]
                 self.player_with_highest_bid = self.current_player
                 self.other_auction_players = self.players.copy()
@@ -700,7 +727,6 @@ class Game:
             if not self.other_auction_players:
                 prop_index = self.player_before_auction_state.position
                 self.player_with_highest_bid.update_money(-self.highest_bid)
-                self.player_with_highest_bid.update_equity(-self.highest_bid + int(self.board[prop_index][1]/2))
                 self.player_with_highest_bid.property_in_use.append(prop_index)
                 self.highest_bid = 0
                 self.player_with_highest_bid = None
@@ -722,16 +748,12 @@ class Game:
                 print("\n\nTrade List: ", self.trade_list)
                 print("Player accepted the trade")
                 player.update_money(-self.trade_list[2])
-                player.update_equity(-self.trade_list[2])
                 trade_player.update_money(self.trade_list[2])
-                trade_player.update_equity(self.trade_list[2])
 
                 player.update_money(self.trade_list[3])
-                player.update_equity(self.trade_list[3])
                 trade_player.update_money(-self.trade_list[3])
-                trade_player.update_equity(-self.trade_list[3])
-                print(f"{player.symbol} ${player.money}, "
-                        f"{trade_player.symbol} ${trade_player.money}")
+                print(f"{player.symbol} ${player.get_money()}, "
+                        f"{trade_player.symbol} ${trade_player.get_money()}")
 
                 # FIXME Something is broken here!
                 for i in self.trade_list[5]:
@@ -746,7 +768,6 @@ class Game:
                         elif self.trade_list[6] == 0:
                             ten_percent_interest = math.ceil((self.board[i][1] // 2) * .1)
                             player.update_money(-ten_percent_interest)
-                            player.update_equity(-ten_percent_interest)
                 
                 # FIXME, error in trades
                 for i in self.trade_list[4]:
@@ -761,7 +782,7 @@ class Game:
                         elif action[65] == 0:
                             ten_percent_interest = math.ceil((self.board[i][1] // 2) * .1)
                             trade_player.update_money(-ten_percent_interest)
-                            trade_player.update_equity(-ten_percent_interest)
+
             self.in_trade = False
             self.current_player = self.trade_list[0]
         elif action_type == 'MORTGAGE':
@@ -785,7 +806,6 @@ class Game:
             except ValueError:
                 trader_money = 0
             
-            
             print("Trade Request Sent")
             trade_number = action[7]
             trade_player = None
@@ -800,11 +820,7 @@ class Game:
         elif action_type == 'SELL_HOUSE':
             player.sell_house(action[4])
         elif action_type == 'END':
-            if player.is_bankrupt():
-                print("\nA player went bankrupt.\n")
-                self.players.remove(player)
-                if self.game_ended():
-                    print("Game over!")
+            
             if player.rolled_number_doubles > 0:
                 self.current_player = player
             else:
@@ -868,7 +884,6 @@ class Game:
 
 
 
-            
 ACTION_LOOKUP = {
     0 : 'BUY_PROPERTY_LANDED',
     1 : 'IN_JAIL_ACTION',

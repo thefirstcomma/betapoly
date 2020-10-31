@@ -13,7 +13,6 @@ class Player:
         self.property_in_use = [] 
         self.property_in_mort = []
         self.money = 1500
-        self.total_equity = 1500
         self.in_jail = False
         self.turns_in_jail = 0
         self.get_out_jail_card = 0
@@ -246,7 +245,6 @@ class Player:
         location_property = int(location_property)
         self.houses[location_property] += 1
         self.update_money(-self.board[location_property][10])
-        self.update_equity(-self.board[location_property][10] // 2)
     
     def buyable(self, location_property):
         location_property = int(location_property)
@@ -259,10 +257,14 @@ class Player:
         elif not self.buy_numb_houses_is_good(location_property):
             print(f"Can't build multiple houses in a non-row fashion.")
             return False
+        elif self.money - (self.board[location_property][10]) < 0:
+            print("Not enough money to buy a house! Cannot Buy!")
+            return False
         elif self.is_monopoly(location_property):
             print("This property is a monopoly! Buying!")
             return True
         else:
+            print("@player.buyable() - This print statement is a bug!")
             return False
         
     def sell_house(self, location_property):
@@ -285,6 +287,7 @@ class Player:
             print("This property is sellable! Selling")
             return True
         else:
+            print("@player.sellable() - This print statement is a bug!")
             return False
 
 
@@ -304,7 +307,6 @@ class Player:
         ten_percent_interest = math.ceil((self.board[location_property][1] // 2) * .1)
         cost_plus_ten_percent_interest = (self.board[location_property][1] // 2) + ten_percent_interest
         self.update_money(-cost_plus_ten_percent_interest)
-        self.update_equity(-ten_percent_interest)
     
     def might_pay_10_percent_extra_mortgaged_property(self, loc_property):
         print("Received a new mortgaged property from a player!")
@@ -322,5 +324,3 @@ class Player:
             action = input()
         self.money += value
     
-    def update_equity(self, value):
-        self.total_equity += value
