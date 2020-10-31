@@ -436,7 +436,7 @@ class Game:
 
 
 
-     # indexes of the list of action {
+    # indexes of the list of action {
     #     0 : Type For ACTION_LOOKUP
     #     1 : PAY 50 FOR JAIL (0)/ ROLL DOUBLE (1)/ USE G.O.O.J CARD (2)
     #     2 : DONT BUY / BUY INDEX PROPERTY LANDED ON   [0,1]
