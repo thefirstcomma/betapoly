@@ -46,7 +46,8 @@ class Game:
         self.other_auction_players = self.players.copy()
         self.rolled_double = False
         self.trade_list = []
-        self.auctioned_property = [None]
+        self.auctioned_property = -1
+        self.bankruptcy_auction = {}
 
     def roll_dice(self):
         first_roll = random.randint(1,6)
@@ -396,24 +397,39 @@ class Game:
     def check_bankrupt(self, player, new_entity_owner):
         if player.is_bankrupt():
             print("\nA player went bankrupt.\n")
-            self.players.remove(player)
-
+            
             if new_entity_owner == "Bank":
                 print("Player's property goes to the Bank")
-                self.auctioned_property = [[player.property_in_mort], [player.property_in_use]]
-                self.in_auction = True
+                for i in player.property_in_mort:
+                    self.bankruptcy_auction[i] = True
+                for i in player.property_in_use:
+                    self.bankruptcy_auction[i] = False
+
+                index_next_player = (self.players.index(player)) % (len(self.players) - 1)
+                self.players.remove(player)
+                self.player_before_auction_state = self.players[index_next_player]
+
                 copy_of_players = self.players.copy()
                 random.shuffle(copy_of_players)
                 self.current_player = copy_of_players.pop()
+
+                if player.property_in_mort or player.property_in_use:
+                    self.in_auction = True
+                else:
+                    print("Player owns no property, no auction!")
+                    self.in_auction = False
+                    self.current_player = self.player_before_auction_state
             else:
                 print(f"Player's property goes to {new_entity_owner.symbol}")
                 new_entity_owner.property_in_mort += player.property_in_mort
                 new_entity_owner.property_in_use += player.property_in_use
                 for i in range(40):
                     if player.houses[i] != 0:
-                        player.money += player.houses[i] * self.board[i][10]
+                        player.money += player.houses[i] * (self.board[i][10] // 2)
                 if player.money > 0:
                     new_entity_owner.update_money(player.money)
+                    print(f"Money: {new_entity_owner.symbol} : ${new_entity_owner.money}")
+                self.players.remove(player)
                 
             
 
@@ -625,7 +641,9 @@ class Game:
                     trade_player = pla
             player_prop = player.property_in_mort + player.property_in_use
             trader_prop = trade_player.property_in_mort + trade_player.property_in_use
-
+            if self.in_trade == True:
+                print("You cannot trade inside a Trade")
+                return False
             if trade_number == player.player_number:
                 print("You cannot trade with yourself!")
                 return False
@@ -647,7 +665,11 @@ class Game:
             return True
 
         elif action_type == 'ACCEPT_TRADE':
-            return True
+            if self.in_trade:
+                return True
+            else:
+                print("Not currently in a Trade")
+                return False
         else:
             print("Received Action that wasn't recognized!!!!")
             return False
@@ -675,6 +697,7 @@ class Game:
                 print("Property goes to an auction!")
                 self.in_auction = True
                 self.player_before_auction_state = self.current_player
+                self.auctioned_property = [player.position]
                 copy_of_players = self.players.copy()
                 random.shuffle(copy_of_players)
                 self.current_player = copy_of_players.pop()
@@ -714,16 +737,16 @@ class Game:
         elif action_type == 'CONTINUE_AUCTION':
             if action[10] > self.highest_bid:
                 print("New highest Bidder!!")
-                self.auctioned_property = [self.player_before_auction_state.position]
                 self.highest_bid = action[10]
                 self.player_with_highest_bid = self.current_player
                 self.other_auction_players = self.players.copy()
                 self.other_auction_players.remove(self.player_with_highest_bid)
                 random.shuffle(self.other_auction_players)
             else:
-                print("Not enough money against the highest bid!")
+                print("Not enough money contested against the highest bid!")
                 self.other_auction_players.remove(player)
-
+            
+            # Nobody else challenges the auction!
             if not self.other_auction_players:
                 prop_index = self.player_before_auction_state.position
                 self.player_with_highest_bid.update_money(-self.highest_bid)
@@ -731,9 +754,18 @@ class Game:
                 self.highest_bid = 0
                 self.player_with_highest_bid = None
                 self.other_auction_players = self.players.copy()
-                self.current_player = self.player_before_auction_state
-                self.player_before_auction_state = None
-                self.in_auction = False
+                 
+                # if no more numbers in the auction-list
+                if not self.auctioned_property and not self.bankruptcy_auction:
+                    self.in_auction = False
+                    self.current_player = self.player_before_auction_state
+                else: # more indices in the aution-list
+                    print("Another Auction Started!")
+                    if len(self.auctioned_property) == 2:
+                        for i in self.auctioned_property:
+                            self.auctioned_property.remove(prop_index)
+                    elif len(self.auctioned_property) == 1:
+                        self.auctioned_property.remove(prop_index)
             else:
                 next_bidder = self.other_auction_players[0]
                 self.current_player = next_bidder
@@ -805,7 +837,6 @@ class Game:
                 trader_money = int(action[9])
             except ValueError:
                 trader_money = 0
-            
             print("Trade Request Sent")
             trade_number = action[7]
             trade_player = None
@@ -820,7 +851,6 @@ class Game:
         elif action_type == 'SELL_HOUSE':
             player.sell_house(action[4])
         elif action_type == 'END':
-            
             if player.rolled_number_doubles > 0:
                 self.current_player = player
             else:
@@ -897,4 +927,3 @@ ACTION_LOOKUP = {
     9 : 'END',
     10 : 'ROLL-DICE'
 }
-
