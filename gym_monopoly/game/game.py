@@ -21,7 +21,6 @@ from gym_monopoly.game.board_info import BOARD, CHANCE, COMMUNITY_CHEST
 # Auction for housing, limit housing=32, hotels=12, -- everytime someone buys/sells houses, iterate player actions.
 # Auction bug, when everybody types 'n'
 # Player number limit when trading, can't trade with yourself!
-# Work on bankruptcy
 
 
 class Game:
@@ -910,7 +909,8 @@ class Game:
         return self.get_state()
 
     def get_state(self):
-        return [self.players, self.current_player, self.board, self.total_houses, self.total_hotels, self.rolled_double, self.in_auction, self.highest_bid, self.player_with_highest_bid, self.other_auction_players]
+        return [self.players, self.current_player, self.board, self.total_houses, self.total_hotels, self.rolled_double, self.in_auction, self.highest_bid, 
+                self.player_with_highest_bid, self.other_auction_players, self.auctioned_property, self.bankruptcy_auction]
 
 
 
